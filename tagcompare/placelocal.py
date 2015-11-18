@@ -1,24 +1,31 @@
 import json
 from urllib import urlencode
 import time
+import os
+
 import requests
 
-# TODO: Should get our own secret
-# TODO: Put it in from secret file
-PL_API_HEADERS = {"pl-secret": "HELLO",
-                  "pl-service-identifier": "WORLD"}
 
-PL_TEST_PUBLISHER = "627" # IHG!!
+PL_TEST_PUBLISHER = "627"  # IHG!!
 TIMESTAMP = time.strftime("%Y%m%d-%H%M%S")
 
-#PL_DOMAIN = "www.placelocal.com/"
+# PL_DOMAIN = "www.placelocal.com/"
 PL_DOMAIN = "www.placelocaldemo.com/"
 
-def getActiveCampaigns(pid=PL_TEST_PUBLISHER):
+
+def _read_placelocal_api_headers():
+    json_file = '.placelocal.json'
+    if not os.path.exists(json_file):
+        raise IOError('No {} file to read from!  Please see project README'.format(json_file))
+    headers = json.loads(open('.placelocal.json').read())
+    return headers
+
+
+def get_active_campaigns(pid=PL_TEST_PUBLISHER):
     # TODO: Make this better
     url = "https://" + PL_DOMAIN + PL_TEST_PUBLISHER + \
           "/campaigns?status=active"
-    r = requests.get(url, headers=PL_API_HEADERS)
+    r = requests.get(url, headers=_read_placelocal_api_headers())
     if r.status_code != 200:
         print("getActiveCampaigns: Error code: %s" % r.status_code)
         return None
@@ -28,8 +35,8 @@ def getActiveCampaigns(pid=PL_TEST_PUBLISHER):
     return data['data']['campaigns']
 
 
-def getActiveTagsForPublisher(pid=PL_TEST_PUBLISHER):
-    campaigns = getActiveCampaigns()
+def get_active_tags_for_publisher(pid=PL_TEST_PUBLISHER):
+    campaigns = get_active_campaigns()
 
     if not campaigns:
         return None
@@ -38,17 +45,16 @@ def getActiveTagsForPublisher(pid=PL_TEST_PUBLISHER):
     all_tags = {}
     for c in campaigns:
         cid = c['id']
-        tags = getTags(cid)
+        tags = get_tags(cid)
         all_tags[cid] = tags
 
     return all_tags
 
 
-"""
-Gets a set of tags for a campaign, the key is its size and the value is the tag HTML
-"""
-def getTags(cid):
-    adsizes = [ 'smartphone_banner', 'skyscraper', 'halfpage', 'medium_rectangle', 'smartphone_wide_banner', 'leaderboard']
+# Gets a set of tags for a campaign, the key is its size and the value is the tag HTML
+def get_tags(cid):
+    adsizes = ['smartphone_banner', 'skyscraper', 'halfpage', 'medium_rectangle', 'smartphone_wide_banner',
+               'leaderboard']
     protocol = ['http_ad_tags', 'https_ad_tags']
     type = ['iframe', 'script']
 
@@ -58,7 +64,7 @@ def getTags(cid):
     # TODO: Note that animation time is set to 1 to make it static after 1s, but we only get last frame
     qp = urlencode({"ispreview": 0, "isae": 0, "animationtime": 1, "usetagmacros": 0})
     url += qp
-    r = requests.get(url, headers=PL_API_HEADERS)
+    r = requests.get(url, headers=_read_placelocal_api_headers())
     if r.status_code != 200:
         print("getTags: error: %s" % r)
         return None
@@ -83,11 +89,13 @@ def getTags(cid):
         print "missing %s from response!" % (e, )
         return None
 
-def getActiveTagsForPublisher_test():
-    all_tags = getActiveTagsForPublisher()
+
+def test():
+    all_tags = get_active_tags_for_publisher()
     tag_count = len(all_tags)
     print "getActiveTagsForPublisher_test: Found {} tags".format(tag_count)
     assert tag_count > 0, "No tags found!"
 
+
 if __name__ == '__main__':
-    getActiveTagsForPublisher_test()
+    test()

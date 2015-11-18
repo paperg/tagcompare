@@ -43,7 +43,7 @@ BROWSER_TEST_MATRIX = {
 
 def testcampaign(cid):
     tags = {}
-    tags[cid] = placelocal.getTags(cid=cid)
+    tags[cid] = placelocal.get_tags(cid=cid)
     if not tags:
         print "No tags found, bailing..."
         return
@@ -66,7 +66,7 @@ def main(cids=None, pid=None):
         if not pid:
             raise ValueError("pid must be specified if there are no cids!")
 
-        cids = placelocal.getActiveCampaigns(pid)
+        cids = placelocal.get_active_campaigns(pid)
 
     for cid in cids:
         testcampaign(cid)

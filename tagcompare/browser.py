@@ -1,12 +1,21 @@
 import traceback
+import os
+import json
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
-import os
+
 import image
-import datetime
+
+
+def _read_remote_webdriver_key():
+    json_file = '.browser.json'
+    if not os.path.exists(json_file):
+        raise IOError('No {} file to read from!  Please see project README'.format(json_file))
+    data = json.loads(open('.browser.json').read())
+    return str.format('{}:{}', data['user'], data['key'])
 
 
 def setup_webdriver(remote=False, capabilities=None):
@@ -14,7 +23,7 @@ def setup_webdriver(remote=False, capabilities=None):
         if not capabilities:
             raise ValueError("capabilities must be defined for remote runs!")
 
-        remote_webdriver_url = "http://paperg:CzSxxSypfJKmTHZfyxyg@hub.browserstack.com:80/wd/hub"
+        remote_webdriver_url = "http://{}@hub.browserstack.com:80/wd/hub".format(_read_remote_webdriver_key())
         driver = webdriver.Remote(
             command_executor=remote_webdriver_url,
             desired_capabilities=capabilities)
@@ -23,15 +32,13 @@ def setup_webdriver(remote=False, capabilities=None):
         driver = webdriver.Firefox()
 
     driver.implicitly_wait(20)
-    driver.get("about:blank");
+    driver.get("about:blank")
     return driver
 
 
 def wait_until_element_disappears(driver, locator):
-    #print("wait_until_element_disappears start... {}".format(datetime.datetime.now()))
     WebDriverWait(driver, 20).until(
         EC.invisibility_of_element_located(locator=locator))
-    #print("wait_until_element_disappears end... {}".format(datetime.datetime.now()))
 
     '''Hack to make it work for IE9
     But it didnt work... so commenting it out:
@@ -40,6 +47,7 @@ def wait_until_element_disappears(driver, locator):
         # IE sucks
         time.sleep(15)
     '''
+
 
 def _display_tag(driver, tag):
     script = _make_script(tag)
@@ -99,6 +107,8 @@ def _capture_tags(driver, tags, outputdir):
 Take a screenshot of a specific webelement
 http://stackoverflow.com/questions/15018372/how-to-take-partial-screenshot-with-selenium-webdriver-in-python
 '''
+
+
 def screenshot_element(driver, element, output_path):
     size = element.size
     location = element.location
