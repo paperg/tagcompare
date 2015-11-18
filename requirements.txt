@@ -1,0 +1,8 @@
+requests
+# Install with: `pip install -r requirements.txt`
+
+selenium == 2.48.0
+pytest == 2.8.2
+requests == 2.8.1
+pillow == 3.0.0
+scipy == 0.16.1
