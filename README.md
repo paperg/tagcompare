@@ -5,6 +5,8 @@
 # TAGCOMPARE
 
 ## Setup
+`make install` to install dependencies
+
 ### config.json
 Make a local copy of [`config.json`](tagcompare/config.json) called `config.local.json`
 Update the values for webdriver user/key and placelocal secret:

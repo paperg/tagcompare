@@ -1,7 +1,10 @@
+install:
+	pip install -r requirements.txt
+
 .PHONY: test
-test:
+test: install
 	PYTHONPATH=. py.test -s
 
 .PHONY: run
-run:
+run: install
 	cd tagcompare && python main.py
