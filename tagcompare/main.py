@@ -1,6 +1,6 @@
 import os
 import time
-import image
+import compare
 import placelocal
 import browser
 
@@ -14,29 +14,50 @@ OUTPUT_DIR = os.path.join("output", TIMESTAMP)
 # https://www.browserstack.com/automate/capabilities
 BROWSER_TEST_MATRIX = {
     "chrome": {
-        'platform': "WINDOWS",
-        'browserName': "chrome",
-        'browserstack.debug:': "true",
-        'project': "advers",
-        'name': TIMESTAMP,
-        'browserstack.selenium_version': "2.48.2"
+        "enabled": False,
+        "capabilities": {
+            'platform': "WINDOWS",
+            'browserName': "chrome",
+            'browserstack.debug:': "true",
+            'project': "advers",
+            'name': TIMESTAMP,
+            'browserstack.selenium_version': "2.48.2"
+        }
+    },
+    "firefox41": {
+        "enabled": True,
+        "capabilities": {
+            'platform': "WINDOWS",
+            'browserName': "firefox",
+            "version": "41",
+            'browserstack.debug:': "true",
+            'project': "advers",
+            'name': TIMESTAMP,
+            'browserstack.selenium_version': "2.48.2"
+        }
     },
     "firefox": {
-        'platform': "WINDOWS",
-        'browserName': "firefox",
-        'browserstack.debug:': "true",
-        'project': "advers",
-        'name': TIMESTAMP,
-        'browserstack.selenium_version': "2.48.2"
+        "enabled": True,
+        "capabilities": {
+            'platform': "WINDOWS",
+            'browserName': "firefox",
+            'browserstack.debug:': "true",
+            'project': "advers",
+            'name': TIMESTAMP,
+            'browserstack.selenium_version': "2.48.2"
+        }
     },
     "ie11": {
-        'platform': "WINDOWS",
-        'browserName': "internet explorer",
-        'version': "11",
-        'browserstack.debug:': "true",
-        'project': "advers",
-        'name': TIMESTAMP,
-        'browserstack.selenium_version': "2.48.2"
+        "enabled": False,
+        "capabilities": {
+            'platform': "WINDOWS",
+            'browserName': "internet explorer",
+            'version': "11",
+            'browserstack.debug:': "true",
+            'project': "advers",
+            'name': TIMESTAMP,
+            'browserstack.selenium_version': "2.48.2"
+        }
     }
 }
 
@@ -49,12 +70,18 @@ def testcampaign(cid):
         return
 
     # Use remote browsers from browserstack
+    configs = []
     for config in BROWSER_TEST_MATRIX:
-        capabilities = BROWSER_TEST_MATRIX[config]
+        config_data = BROWSER_TEST_MATRIX[config]
+        if not config_data['enabled']:
+            continue
+
+        configs.append(config)
+        capabilities = config_data['capabilities']
         output_dir = os.path.join(OUTPUT_DIR, config)
         browser.capture_tags_remotely(capabilities, tags, output_dir)
 
-    image.compare_output_dir(OUTPUT_DIR)
+    compare.compare_output(OUTPUT_DIR, configs=configs)
 
 
 def main(cids=None, pid=None):

@@ -5,11 +5,10 @@ import os
 import shutil
 
 
-'''
-Compares two images and return a score for how similar they are
-http://stackoverflow.com/questions/1927660/compare-two-images-the-python-linux-way
-'''
 def compare(file1, file2):
+    """Compares two images and return a score for how similar they are
+    http://stackoverflow.com/questions/1927660/compare-two-images-the-python-linux-way
+    """
     image1 = _normalize_img(file1)
     image2 = _normalize_img(file2)
     result = _compare_img(image1, image2)
@@ -21,7 +20,7 @@ def _compare_img(img1, img2):
     h1 = img1.histogram()
     h2 = img2.histogram()
     diff_squares = [(h1[i] - h2[i]) ** 2 for i in xrange(len(h1))]
-    rms = math.sqrt(sum(diff_squares) / len(h1));
+    rms = math.sqrt(sum(diff_squares) / len(h1))
     return rms
 
 
@@ -42,17 +41,12 @@ def _normalize_img(img_file):
     return Image.open(img_file)
 
 
-def _n_way_compare(compare_set):
+def compare_configs(compare_set, config1, config2):
     for c in compare_set:
         cset = compare_set[c]
-        #print cset
-
-        firefox = cset['firefox']
-        chrome = cset['chrome']
-        ie11 = cset['ie11']
-        compare(chrome, firefox)
-        compare(chrome, ie11)
-        compare(firefox, ie11)
+        c1 = cset[config1]
+        c2 = cset[config2]
+        compare(c1, c2)
 
 
 def _load_files(dirpath):
@@ -81,21 +75,35 @@ def _load_files(dirpath):
             fileset[d] = fpath
             result[f] = fileset
 
-    #print result
+    # print result
     return result
 
 
-def compare_output_dir(dirpath):
+def compare_output(dirpath, configs=None):
     print ""
-    print "_--==== COMPARING RESULTS ====--_"
+    print "_--==== COMPARING RESULTS in {} ====--_"
     print ""
 
     if not path.exists(dirpath):
-        raise ValueError('dirpath is not a valid path!')
+        raise ValueError('dirpath {} is not a valid path!'.format(dirpath))
 
     compare_set = _load_files(dirpath)
-    _n_way_compare(compare_set)
+    compare_configs(compare_set, configs[0], configs[1])
+
+
+def __get_subdirs(d):
+    return filter(os.path.isdir, [os.path.join(d, f) for f in os.listdir(d)])
+
+
+def compare_last_result(configs=None):
+    # Get the last created output dir:
+    subdirs = __get_subdirs('output')
+    if not subdirs:
+        raise IOError("No valid output dirs found!")
+    print subdirs
+    last_created_dir = max(subdirs, key=os.path.getmtime)
+    compare_output(last_created_dir, configs)
 
 
 if __name__ == '__main__':
-    compare_output_dir("output/20151116-175020/")
+    compare_last_result(configs=['firefox41', 'firefox'])
