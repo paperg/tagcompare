@@ -1,8 +1,9 @@
 import os
 import time
-import compare
+import image
 import placelocal
-import browser
+import webdriver
+import config
 
 # TODO: Globals should get refactored into a config file
 # How long to wait for ad to load in seconds
@@ -65,7 +66,7 @@ BROWSER_TEST_MATRIX = {
 def testcampaign(cid):
     tags = {}
     tags[cid] = placelocal.get_tags(cid=cid)
-    if not tags:
+    if not tags or len(tags) == 0:
         print "No tags found, bailing..."
         return
 
@@ -79,9 +80,9 @@ def testcampaign(cid):
         configs.append(config)
         capabilities = config_data['capabilities']
         output_dir = os.path.join(OUTPUT_DIR, config)
-        browser.capture_tags_remotely(capabilities, tags, output_dir)
+        webdriver.capture_tags_remotely(capabilities, tags, output_dir)
 
-    compare.compare_output(OUTPUT_DIR, configs=configs)
+    image.compare_output(OUTPUT_DIR, configs=configs)
 
 
 def main(cids=None, pid=None):
@@ -100,4 +101,4 @@ def main(cids=None, pid=None):
 
 
 if __name__ == '__main__':
-    main(cids=[4795])
+    main(cids=config.DEFAULT.campaigns)

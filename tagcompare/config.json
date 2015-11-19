@@ -1,0 +1,16 @@
+{
+  "campaigns": [ 4795 ],
+  "publishers": [],
+  "tagsizes": [ "medium_rectangle", "skyscraper", "halfpage" ],
+  "webdriver": {
+    "user": "USER",
+    "key": "KEY"
+  },
+  "placelocal": {
+    "domain": "www.placelocaldemo.com",
+    "secret": {
+      "pl-secret": "SECRET",
+      "pl-service-identifier": "SERVICEID"
+    }
+  }
+}

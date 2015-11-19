@@ -81,7 +81,7 @@ def _load_files(dirpath):
 
 def compare_output(dirpath, configs=None):
     print ""
-    print "_--==== COMPARING RESULTS in {} ====--_"
+    print "_--==== COMPARING RESULTS ====--_"
     print ""
 
     if not path.exists(dirpath):

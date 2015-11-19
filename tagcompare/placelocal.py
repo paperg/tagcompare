@@ -1,30 +1,23 @@
 import json
 from urllib import urlencode
 import time
-import os
-
+import config
 import requests
 
 
 PL_TEST_PUBLISHER = "627"  # IHG!!
 TIMESTAMP = time.strftime("%Y%m%d-%H%M%S")
-
-# PL_DOMAIN = "www.placelocal.com/"
-PL_DOMAIN = "www.placelocaldemo.com/"
+PL_DOMAIN = config.DEFAULT.domain
 
 
 def _read_placelocal_api_headers():
-    json_file = '.placelocal.json'
-    if not os.path.exists(json_file):
-        raise IOError('No {} file to read from!  Please see project README'.format(json_file))
-    headers = json.loads(open('.placelocal.json').read())
+    headers = config.DEFAULT.placelocal['secret']
     return headers
 
 
 def get_active_campaigns(pid=PL_TEST_PUBLISHER):
     # TODO: Make this better
-    url = "https://" + PL_DOMAIN + PL_TEST_PUBLISHER + \
-          "/campaigns?status=active"
+    url = str.format("https://{}/{}/campaigns?status=active", PL_DOMAIN, PL_TEST_PUBLISHER)
     r = requests.get(url, headers=_read_placelocal_api_headers())
     if r.status_code != 200:
         print("getActiveCampaigns: Error code: %s" % r.status_code)
@@ -59,7 +52,7 @@ def get_tags(cid):
     type = ['iframe', 'script']
 
     # TODO: hardcoding config params is bad
-    url = "https://" + PL_DOMAIN + "api/v2/campaign/%s/tags?" % (str(cid))
+    url = "https://{}/api/v2/campaign/{}/tags?".format(PL_DOMAIN, cid)
 
     # TODO: Note that animation time is set to 1 to make it static after 1s, but we only get last frame
     qp = urlencode({"ispreview": 0, "isae": 0, "animationtime": 1, "usetagmacros": 0})
