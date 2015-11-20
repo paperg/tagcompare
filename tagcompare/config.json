@@ -1,16 +1,49 @@
 {
-  "campaigns": [ 4795 ],
-  "publishers": [],
-  "tagsizes": [ "medium_rectangle", "skyscraper", "halfpage" ],
-  "webdriver": {
-    "user": "USER",
-    "key": "KEY"
-  },
   "placelocal": {
     "domain": "www.placelocaldemo.com",
     "secret": {
       "pl-secret": "SECRET",
       "pl-service-identifier": "SERVICEID"
+    }
+  },
+  "campaigns": [ 4795 ],
+  "publishers": [],
+  "tagsizes": [ "medium_rectangle", "skyscraper", "halfpage" ],
+  "webdriver": {
+    "user": "USER",
+    "key": "KEY",
+    "matrix": {
+      "chrome": {
+        "enabled": true,
+        "capabilities": {
+          "platform": "WINDOWS",
+          "browserName": "chrome",
+          "browserstack.debug:": "true",
+          "project": "tagcompare",
+          "browserstack.selenium_version": "2.48.2"
+        }
+      },
+      "firefox": {
+        "enabled": true,
+        "capabilities": {
+          "platform": "WINDOWS",
+          "browserName": "firefox",
+          "browserstack.debug:": "true",
+          "project": "tagcompare",
+          "browserstack.selenium_version": "2.48.2"
+        }
+      },
+      "ie11": {
+        "enabled": true,
+        "capabilities": {
+          "platform": "WINDOWS",
+          "browserName": "internet explorer",
+          "version": "11",
+          "browserstack.debug:": "true",
+          "project": "tagcompare",
+          "browserstack.selenium_version": "2.48.2"
+        }
+      }
     }
   }
 }

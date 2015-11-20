@@ -1,9 +1,11 @@
 import os
 import time
+
 import image
 import placelocal
 import webdriver
 import config
+
 
 # TODO: Globals should get refactored into a config file
 # How long to wait for ad to load in seconds
@@ -13,54 +15,7 @@ TIMESTAMP = time.strftime("%Y%m%d-%H%M%S")
 OUTPUT_DIR = os.path.join("output", TIMESTAMP)
 
 # https://www.browserstack.com/automate/capabilities
-BROWSER_TEST_MATRIX = {
-    "chrome": {
-        "enabled": False,
-        "capabilities": {
-            'platform': "WINDOWS",
-            'browserName': "chrome",
-            'browserstack.debug:': "true",
-            'project': "advers",
-            'name': TIMESTAMP,
-            'browserstack.selenium_version': "2.48.2"
-        }
-    },
-    "firefox41": {
-        "enabled": True,
-        "capabilities": {
-            'platform': "WINDOWS",
-            'browserName': "firefox",
-            "version": "41",
-            'browserstack.debug:': "true",
-            'project': "advers",
-            'name': TIMESTAMP,
-            'browserstack.selenium_version': "2.48.2"
-        }
-    },
-    "firefox": {
-        "enabled": True,
-        "capabilities": {
-            'platform': "WINDOWS",
-            'browserName': "firefox",
-            'browserstack.debug:': "true",
-            'project': "advers",
-            'name': TIMESTAMP,
-            'browserstack.selenium_version': "2.48.2"
-        }
-    },
-    "ie11": {
-        "enabled": False,
-        "capabilities": {
-            'platform': "WINDOWS",
-            'browserName': "internet explorer",
-            'version': "11",
-            'browserstack.debug:': "true",
-            'project': "advers",
-            'name': TIMESTAMP,
-            'browserstack.selenium_version': "2.48.2"
-        }
-    }
-}
+BROWSER_TEST_MATRIX = config.DEFAULT.matrix
 
 
 def testcampaign(cid):

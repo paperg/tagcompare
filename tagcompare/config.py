@@ -52,5 +52,9 @@ class Config():
     def placelocal(self):
         return self.config['placelocal']
 
+    @property
+    def matrix(self):
+        return self.webdriver['matrix']
+
 
 DEFAULT = Config()
