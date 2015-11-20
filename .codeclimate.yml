@@ -1,7 +1,14 @@
 engines:
+  radon:
+    enabled: true
+    config:
+      threshold: 'B'
   fixme:
     enabled: true
   pep8:
     enabled: true
-  radon:
-    enabled: true
+ratings:
+    paths:
+    - "**.py"
+exclude_paths:
+- "tagcompare/tests/*"
