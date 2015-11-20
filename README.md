@@ -38,6 +38,7 @@ Update the values for webdriver user/key and placelocal secret:
 
 ## Running the tool
 `make run` will run the tool to capture screenshots and compare them
+
 `make compare` will compare existing output, given a list of campaigns and configs
 
 ## Running tests
