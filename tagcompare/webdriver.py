@@ -21,7 +21,7 @@ def setup_webdriver(remote=False, capabilities=None):
         if not capabilities:
             raise ValueError("capabilities must be defined for remote runs!")
 
-        remote_webdriver_url = "http://{}@hub.browserstack.com:80/wd/hub".format(_read_remote_webdriver_key())
+        remote_webdriver_url = "http://{}@{}".format(_read_remote_webdriver_key(), config.DEFAULT.webdriver['url'])
         driver = webdriver.Remote(
             command_executor=remote_webdriver_url,
             desired_capabilities=capabilities)

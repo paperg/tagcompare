@@ -11,9 +11,12 @@
 Make a local copy of [`config.json`](tagcompare/config.json) called `config.local.json`
 Update the values for webdriver user/key and placelocal secret:
 ```json
+  ...
   "webdriver": {
     "user": "USER",
-    "key": "KEY"
+    "key": "KEY",
+    "url": "REMOTE_WEBDRIVER_URL"
+    ...
   },
   "placelocal": {
     "domain": "www.placelocaldemo.com",
@@ -22,6 +25,7 @@ Update the values for webdriver user/key and placelocal secret:
       "pl-service-identifier": "SERVICEID"
     }
   }
+  ...
 ```
 
 ## Running the tool
