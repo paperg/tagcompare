@@ -7,9 +7,6 @@
  ║ ╠═╣║ ╦  ║  ║ ║║║║╠═╝╠═╣╠╦╝║╣ 
  ╩ ╩ ╩╚═╝  ╚═╝╚═╝╩ ╩╩  ╩ ╩╩╚═╚═╝
 ```
-
-*Scenario*: For a given creative tag, we want to make sure it looks good in all kinds of browser configs.
-
 There are many differences and issues when trying to render an HTML5 creative under different platform/browsers.
   1. Fonts might look or **be** different
   2. CSS / layout differences
@@ -41,6 +38,7 @@ Update the values for webdriver user/key and placelocal secret:
 
 ## Running the tool
 `make run` will run the tool to capture screenshots and compare them
+`make compare` will compare existing output, given a list of campaigns and configs
 
 ## Running tests
 `make test` will run unit tests

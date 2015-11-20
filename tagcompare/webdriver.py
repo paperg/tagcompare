@@ -1,18 +1,19 @@
 import traceback
 import os
+import time
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-import config
+import settings
 import image
-import time
+import output
 
 
 def _read_remote_webdriver_key():
-    data = config.DEFAULT.webdriver
+    data = settings.DEFAULT.webdriver
     return str.format('{}:{}', data['user'], data['key'])
 
 
@@ -21,7 +22,7 @@ def setup_webdriver(remote=False, capabilities=None):
         if not capabilities:
             raise ValueError("capabilities must be defined for remote runs!")
 
-        remote_webdriver_url = "http://{}@{}".format(_read_remote_webdriver_key(), config.DEFAULT.webdriver['url'])
+        remote_webdriver_url = "http://{}@{}".format(_read_remote_webdriver_key(), settings.DEFAULT.webdriver['url'])
         driver = webdriver.Remote(
             command_executor=remote_webdriver_url,
             desired_capabilities=capabilities)
@@ -46,7 +47,7 @@ def _display_tag(driver, tag):
     # Wait until the load spinner goes away
     load_spinner_locator = (By.CSS_SELECTOR, "img[class*='pl-loader-'")
     wait_until_element_disappears(driver=driver, locator=load_spinner_locator)
-    time.sleep(3)   # For good measure
+    time.sleep(3)  # For good measure
 
 
 def _make_script(tag):
@@ -64,25 +65,23 @@ def _write_html(tag_html, output_path):
         f.write(tag_html)
 
 
-def _capture_tags(driver, tags, outputdir):
+def _capture_tags(driver, tags, pathbuilder):
     for cid in tags:
         tags_per_campaign = tags[cid]
         # print "debug: " + str(tags_per_campaign)
-        sizes = config.DEFAULT.tagsizes
+        sizes = settings.DEFAULT.tagsizes
         for tag_size in sizes:
             tag_html = tags_per_campaign[tag_size]
             _display_tag(driver, tag_html)
 
             # Getting ready to write to files
-            if not os.path.exists(outputdir):
-                os.makedirs(outputdir)
-            tag_label = str("{}-{}").format(cid, tag_size)
-            output_path = os.path.join(outputdir, tag_label)
+            pathbuilder.size = tag_size
+            pathbuilder.create()
 
             # TODO: Only works for iframe tags atm
             tag_element = driver.find_element_by_tag_name('iframe')
-            screenshot_element(driver, tag_element, output_path)
-            _write_html(tag_html=tag_html, output_path=output_path)
+            screenshot_element(driver, tag_element, pathbuilder.tagimage)
+            _write_html(tag_html=tag_html, output_path=pathbuilder.taghtml)
 
 
 def screenshot_element(driver, element, output_path):
@@ -111,12 +110,14 @@ def _screenshot(driver, output_path):
     return output_path
 
 
-def capture_tags_remotely(capabilities, tags, outputdir):
+def capture_tags_remotely(capabilities, tags, pathbuilder):
+    """Captures screenshots for tags with remote webdriver
+    """
     print "Starting browser with capabilities: {}...".format(capabilities)
     driver = setup_webdriver(remote=True, capabilities=capabilities)
 
     try:
-        _capture_tags(driver, tags, outputdir)
+        _capture_tags(driver, tags, pathbuilder)
     # Catching generics here because we don't want to leak a browser
     except Exception as e:
         print "Exception caught while running display_tags: {}\n{}".format(e, traceback.format_exc())

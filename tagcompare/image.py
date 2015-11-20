@@ -1,7 +1,5 @@
 import math
 from PIL import Image
-from os import path
-import os
 import shutil
 
 
@@ -39,71 +37,3 @@ def crop(img_file, cropbox):
 def _normalize_img(img_file):
     # TODO: Actually do something to normalize
     return Image.open(img_file)
-
-
-def compare_configs(compare_set, config1, config2):
-    for c in compare_set:
-        cset = compare_set[c]
-        c1 = cset[config1]
-        c2 = cset[config2]
-        compare(c1, c2)
-
-
-def _load_files(dirpath):
-    result = {}
-
-    print("Loading files from {}...".format(dirpath))
-    # Load all the things :ha:
-    # Note - we are assuming the input dir is structured such that it has a bunch of folders with files to compare
-    dirs = os.listdir(dirpath)
-    for d in dirs:
-        dpath = path.join(dirpath, d)
-        if not path.isdir(dpath):
-            continue
-
-        files = os.listdir(dpath)
-        for f in files:
-            if not str(f).endswith(".png"):
-                continue
-
-            # fileset contains different image files with the same name across the different dirs
-            fileset = {}
-            fpath = path.join(dpath, f)
-            if f in result:
-                fileset = result[f]
-
-            fileset[d] = fpath
-            result[f] = fileset
-
-    # print result
-    return result
-
-
-def compare_output(dirpath, configs=None):
-    print ""
-    print "_--==== COMPARING RESULTS ====--_"
-    print ""
-
-    if not path.exists(dirpath):
-        raise ValueError('dirpath {} is not a valid path!'.format(dirpath))
-
-    compare_set = _load_files(dirpath)
-    compare_configs(compare_set, configs[0], configs[1])
-
-
-def __get_subdirs(d):
-    return filter(os.path.isdir, [os.path.join(d, f) for f in os.listdir(d)])
-
-
-def compare_last_result(configs=None):
-    # Get the last created output dir:
-    subdirs = __get_subdirs('output')
-    if not subdirs:
-        raise IOError("No valid output dirs found!")
-    print subdirs
-    last_created_dir = max(subdirs, key=os.path.getmtime)
-    compare_output(last_created_dir, configs)
-
-
-if __name__ == '__main__':
-    compare_last_result(configs=['firefox41', 'firefox'])
