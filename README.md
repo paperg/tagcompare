@@ -2,10 +2,12 @@
 [![Test Coverage](https://codeclimate.com/github/d3ming/tagcompare/badges/coverage.svg)](https://codeclimate.com/github/d3ming/tagcompare/coverage)
 [![Issue Count](https://codeclimate.com/github/d3ming/tagcompare/badges/issue_count.svg)](https://codeclimate.com/github/d3ming/tagcompare)
 
+```
 ╔╦╗╔═╗╔═╗  ╔═╗╔═╗╔╦╗╔═╗╔═╗╦═╗╔═╗
  ║ ╠═╣║ ╦  ║  ║ ║║║║╠═╝╠═╣╠╦╝║╣ 
  ╩ ╩ ╩╚═╝  ╚═╝╚═╝╩ ╩╩  ╩ ╩╩╚═╚═╝
- 
+```
+
 *Scenario*: For a given creative tag, we want to make sure it looks good in all kinds of browser configs.
 
 There are many differences and issues when trying to render an HTML5 creative under different platform/browsers.
