@@ -1,5 +1,4 @@
 import traceback
-import os
 import time
 
 from selenium import webdriver
@@ -9,7 +8,6 @@ from selenium.webdriver.support import expected_conditions as EC
 
 import settings
 import image
-import output
 
 
 def _read_remote_webdriver_key():

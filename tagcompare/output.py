@@ -3,12 +3,15 @@
     - Compares the test configs with the result/output configs
     - Utility methods for getting the right path to outputs
 """
-import settings
 import os
+
+import settings
+
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, 'output')
-TAG_NAME = "tag"    # constant name when storing image/html file
+TAG_NAME = "tag"  # constant name when storing image/html file
+
 
 class PathBuilder():
     """Class to store & build paths/partial paths to outputs of tagcompare
@@ -42,9 +45,11 @@ class PathBuilder():
         result = os.path.join(self.path, TAG_NAME + ".html")
         return result
 
+
 """
 Static helper methods:
 """
+
 
 def makedirs():
     """Makes output directories in the structure of:
@@ -85,6 +90,7 @@ def getpath(config, cid=None, size=None):
 
     result = os.path.join(result, size)
     return result
+
 
 if __name__ == '__main__':
     makedirs()

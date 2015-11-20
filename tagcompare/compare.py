@@ -1,11 +1,14 @@
+import itertools
+
 import output
 import settings
 import image
-import itertools
+
 
 def compare_campaign(cid):
     pb = output.PathBuilder(cid=cid)
     compare_output(pathbuilder=pb, configs=settings.DEFAULT.configs)
+
 
 # TODO: Refactor to new module
 def compare_configs(pathbuilder, configs):
@@ -35,6 +38,7 @@ def compare_output(pathbuilder, configs):
     assert pathbuilder, "No pathbuilder object!"
     assert configs, "No configs!"
     compare_configs(pathbuilder, configs)
+
 
 if __name__ == '__main__':
     for cid in settings.DEFAULT.campaigns:

@@ -1,8 +1,10 @@
 import json
 from urllib import urlencode
 import time
-import settings
+
 import requests
+
+import settings
 
 
 PL_TEST_PUBLISHER = "627"  # IHG!!
@@ -24,7 +26,7 @@ def get_active_campaigns(pid=PL_TEST_PUBLISHER):
         return None
 
     data = json.loads(r.text)
-    #print data
+    # print data
     return data['data']['campaigns']
 
 
@@ -34,7 +36,7 @@ def get_active_tags_for_publisher(pid=PL_TEST_PUBLISHER):
     if not campaigns:
         return None
 
-    #print dir(campaigns)
+    # print dir(campaigns)
     all_tags = {}
     for c in campaigns:
         cid = c['id']
@@ -70,13 +72,13 @@ def get_tags(cid):
 
         result = {}
         for size in adsizes:
-            #print 'size: %s' % size
+            # print 'size: %s' % size
             tag = tags_data[size]['iframe']
             assert len(tag) > 0, "No tag data found!"
             #print tag
             result[size] = tag
 
-        #print "result: " + str(result)
+        # print "result: " + str(result)
         return result
     except KeyError as e:
         print "missing %s from response!" % (e, )
