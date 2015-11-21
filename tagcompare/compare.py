@@ -5,6 +5,10 @@ import settings
 import image
 
 
+# TODO: Make configurable
+ERROR_THRESHOLD = 200
+
+
 def compare_campaign(cid):
     pb = output.PathBuilder(cid=cid)
     compare_output(pathbuilder=pb, configs=settings.DEFAULT.configs)
@@ -13,6 +17,9 @@ def compare_campaign(cid):
 # TODO: Refactor to new module
 def compare_configs(pathbuilder, configs):
     sizes = settings.DEFAULT.tagsizes
+    result = True
+    count = 0
+    errcount = 0
 
     # Compare all combinations of configs
     for a, b in itertools.combinations(configs, 2):
@@ -21,11 +28,21 @@ def compare_configs(pathbuilder, configs):
             pbb = output.PathBuilder(config=b, size=s, cid=pathbuilder.cid)
             if not pba.validate():
                 "Path not found for {}, skipping compare...".format(pba.path)
+                result = False
                 continue
             if not pbb.validate():
                 "Path not found for {}, skipping compare...".format(pbb.path)
+                result = False
                 continue
-            image.compare(pba.tagimage, pbb.tagimage)
+            diff = image.compare(pba.tagimage, pbb.tagimage)
+            count += 1
+            if diff > ERROR_THRESHOLD:
+                errcount += 1
+                print("ERROR: {} vs {} produced diff={}".format(
+                    pba.tagimage, pbb.tagimage, diff))
+
+    print "Compared {} images, {} with errors > {}".format(count, errcount, ERROR_THRESHOLD)
+    return result
 
 
 # TODO: Refactor to new module
