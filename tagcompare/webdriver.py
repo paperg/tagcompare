@@ -15,17 +15,17 @@ def _read_remote_webdriver_key():
     return str.format('{}:{}', data['user'], data['key'])
 
 
-def setup_webdriver(remote=False, capabilities=None):
+def setup_webdriver(remote=True, capabilities=None):
     if remote:
         if not capabilities:
             raise ValueError("capabilities must be defined for remote runs!")
 
-        remote_webdriver_url = "http://{}@{}".format(_read_remote_webdriver_key(), settings.DEFAULT.webdriver['url'])
+        remote_webdriver_url = "http://{}@{}".format(
+            _read_remote_webdriver_key(), settings.DEFAULT.webdriver['url'])
         driver = webdriver.Remote(
             command_executor=remote_webdriver_url,
             desired_capabilities=capabilities)
     else:
-        # TODO: More configs
         driver = webdriver.Firefox()
 
     driver.implicitly_wait(20)
@@ -108,9 +108,14 @@ def _screenshot(driver, output_path):
     return output_path
 
 
-def capture_tags_remotely(capabilities, tags, pathbuilder):
+def capture_tags_remotely(capabilities, tags, pathbuilder, build=None, name=None):
     """Captures screenshots for tags with remote webdriver
     """
+
+    # Extra params to identify the build / job
+    capabilities['build'] = build
+    capabilities['name'] = name
+
     print "Starting browser with capabilities: {}...".format(capabilities)
     driver = setup_webdriver(remote=True, capabilities=capabilities)
 

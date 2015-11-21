@@ -1,0 +1,118 @@
+{
+  "comparisons": {
+    "latest": [ "chrome", "firefox", "ie11", "safari" ],
+    "firefox_beta": [ "firefox", "firefox_beta" ],
+    "chrome_beta": [ "chrome", "chrome_beta" ],
+    "firefox_os": [ "firefox", "firefox_osx", "firefox_xp", "firefox_win10" ],
+    "chrome_os": [ "chrome", "chrome_osx", "chrome_xp", "chrome_win10" ],
+    "ie9": [ "golden", "ie9" ],
+    "ie11": [ "golden", "ie11" ],
+    "chrome": [ "golden", "chrome" ],
+    "safari": [ "golden", "safari"]
+  },
+  "configs": {
+    "golden": {
+      "enabled": true,
+      "capabilities": {
+        "platform": "Windows 7",
+        "browserName": "chrome"
+      }
+    },
+    "chrome": {
+      "enabled": true,
+      "capabilities": {
+        "platform": "Windows 7",
+        "browserName": "chrome"
+      }
+    },
+    "chrome_beta": {
+      "enabled": true,
+      "capabilities": {
+        "platform": "Windows 7",
+        "browserName": "chrome",
+        "version": "beta"
+      }
+    },
+    "chrome_osx": {
+      "enabled": true,
+      "capabilities": {
+        "platform": "OS X 10.11",
+        "browserName": "chrome"
+      }
+    },
+    "chrome_xp": {
+      "enabled": true,
+      "capabilities": {
+        "platform": "Windows XP",
+        "browserName": "chrome"
+      }
+    },
+    "chrome_win10": {
+      "enabled": true,
+      "capabilities": {
+        "platform": "Windows 10",
+        "browserName": "chrome"
+      }
+    },
+    "firefox": {
+      "enabled": true,
+      "capabilities": {
+        "platform": "Windows 7",
+        "browserName": "firefox",
+        "version": "42.0"
+      }
+    },
+    "firefox_beta": {
+      "enabled": true,
+      "capabilities": {
+        "platform": "Windows 7",
+        "browserName": "firefox",
+        "version": "beta"
+      }
+    },
+    "firefox_osx": {
+      "enabled": true,
+      "capabilities": {
+        "platform": "OS X 10.11",
+        "browserName": "firefox"
+      }
+    },
+    "firefox_xp": {
+      "enabled": true,
+      "capabilities": {
+        "platform": "Windows XP",
+        "browserName": "firefox"
+      }
+    },
+    "firefox_win10": {
+      "enabled": true,
+      "capabilities": {
+        "platform": "Windows 10",
+        "browserName": "firefox"
+      }
+    },
+    "ie9": {
+      "enabled": true,
+      "capabilities": {
+        "platform": "Windows 7",
+        "browserName": "internet explorer",
+        "version": "9.0"
+      }
+    },
+    "ie11": {
+      "enabled": true,
+      "capabilities": {
+        "platform": "Windows 10",
+        "browserName": "internet explorer",
+        "version": "11.0"
+      }
+    },
+    "safari": {
+      "enabled": true,
+      "capabilities": {
+        "platform": "OS X 10.11",
+        "browserName": "safari"
+      }
+    }
+  }
+}

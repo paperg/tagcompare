@@ -14,72 +14,13 @@
       "enabled": false,
       "user": "USER",
       "key": "KEY",
-      "url": "hub.browserstack.com:80/wd/hub",
-      "configs": {
-        "chrome": {
-          "enabled": true,
-          "capabilities": {
-            "platform": "WINDOWS",
-            "browserName": "chrome",
-            "browserstack.debug:": "true",
-            "project": "tagcompare",
-            "browserstack.selenium_version": "2.48.2"
-          }
-        },
-        "firefox": {
-          "enabled": true,
-          "capabilities": {
-            "platform": "WINDOWS",
-            "browserName": "firefox",
-            "browserstack.debug:": "true",
-            "project": "tagcompare",
-            "browserstack.selenium_version": "2.48.2"
-          }
-        },
-        "ie11": {
-          "enabled": true,
-          "capabilities": {
-            "platform": "WINDOWS",
-            "browserName": "internet explorer",
-            "version": "11",
-            "browserstack.debug:": "true",
-            "project": "tagcompare",
-            "browserstack.selenium_version": "2.48.2"
-          }
-        }
-      }
+      "url": "hub.browserstack.com:80/wd/hub"
     },
     "saucelabs": {
       "enabled": true,
       "user": "USER",
       "key": "KEY",
-      "url": "ondemand.saucelabs.com:80/wd/hub",
-      "configs": {
-        "chrome": {
-          "enabled": true,
-          "capabilities": {
-            "platform": "Windows 7",
-            "browserName": "chrome",
-            "version": "46.0"
-          }
-        },
-        "firefox": {
-          "enabled": true,
-          "capabilities": {
-            "platform": "Windows 7",
-            "browserName": "firefox",
-            "version": "42.0"
-          }
-        },
-        "ie11": {
-          "enabled": true,
-          "capabilities": {
-            "platform": "Windows 10",
-            "browserName": "internet explorer",
-            "version": "11.0"
-          }
-        }
-      }
+      "url": "ondemand.saucelabs.com:80/wd/hub"
     }
   }
 }

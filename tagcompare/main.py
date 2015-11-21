@@ -1,8 +1,11 @@
+import time
+
 import placelocal
 import webdriver
 import settings
 import output
 import compare
+
 
 
 # TODO: Globals should get refactored into a settings file
@@ -23,6 +26,7 @@ def testcampaign(cid):
     tags[cid] = tags_per_campaign
 
     # Use remote browsers
+    build = str.format("{}_{}", "tagcompare", time.strftime("%Y%m%d-%H%M%S"))
     configs = []
     for config in BROWSER_CONFIGS:
         config_data = BROWSER_CONFIGS[config]
@@ -32,21 +36,29 @@ def testcampaign(cid):
         configs.append(config)
         capabilities = config_data['capabilities']
         pathbuilder = output.PathBuilder(config=config, cid=cid)
-        webdriver.capture_tags_remotely(capabilities, tags, pathbuilder)
+        webdriver.capture_tags_remotely(capabilities, tags, pathbuilder, build=build, name=config)
 
     compare.compare_output(output.PathBuilder(cid=cid), configs=configs)
 
 
-def main(cids=None, pid=None):
+def get_cids(cids=None, pids=None):
     # Input is a PID (publisher id) or a list of CIDs (campaign Ids)
     if not cids:
-        if not pid:
+        if not pids:
             raise ValueError("pid must be specified if there are no cids!")
-        cids = placelocal.get_active_campaigns(pid)
 
+        cids = []
+        for pid in pids:
+            cids = cids.append(placelocal.get_active_campaigns(pid))
+    return cids
+
+
+def main(cids=None, pids=None):
+    # Input is a PID (publisher id) or a list of CIDs (campaign Ids)
+    cids = get_cids(cids=cids, pids=pids)
     for cid in cids:
         testcampaign(cid)
 
 
 if __name__ == '__main__':
-    main(cids=settings.DEFAULT.campaigns, pid=settings.DEFAULT.publishers)
+    main(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.publishers)
