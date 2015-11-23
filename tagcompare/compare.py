@@ -16,25 +16,21 @@ import os
 import output
 import settings
 import image
-
-# TODO: is it bad to import main?
-import main
-
-
-# TODO: Make configurable
-ERROR_THRESHOLD = 200
+import main  # TODO: Probably not appropriate to import main
 
 
 def compare_campaign(cid):
     pb = output.PathBuilder(cid=cid)
-    compare_output(pathbuilder=pb, configs=settings.DEFAULT.configs)
+    compare_configs(pathbuilder=pb, configs=settings.DEFAULT.configs)
 
 
 def compare_configs(pathbuilder, configs):
+    assert pathbuilder, "No pathbuilder object!"
+    assert configs, "No configs!"
+
     sizes = settings.DEFAULT.tagsizes
-    result = True
     count = 0
-    errcount = 0
+    errorcount = 0
 
     # Compare all combinations of configs
     for a, b in itertools.combinations(configs, 2):
@@ -43,47 +39,76 @@ def compare_configs(pathbuilder, configs):
             pbb = output.PathBuilder(config=b, size=s, cid=pathbuilder.cid)
             pba_img = pba.tagimage
             pbb_img = pbb.tagimage
-
-            if not os.path.exists(pba_img):
-                "Path not found for {}, skipping compare...".format(pba_img)
-                result = False
-                continue
-            if not os.path.exists(pbb_img):
-                "Path not found for {}, skipping compare...".format(pbb_img)
-                result = False
-                continue
-            diff = image.compare(pba.tagimage, pbb.tagimage)
             count += 1
-            if diff > ERROR_THRESHOLD:
-                errcount += 1
-                print("ERROR: {} vs {} produced diff={}".format(
-                    pba.tagimage, pbb.tagimage, diff))
+            if not compare_images(pba_img, pbb_img, pathbuilder):
+                errorcount += 1
 
-    print "Compared {} images, {} with errors > {}".format(count, errcount, ERROR_THRESHOLD)
-    return result
+    print "Compared {} images, {} with errors > {}".format(count, errorcount, image.ERROR_THRESHOLD)
+    return errorcount, count
 
 
-def compare_output(pathbuilder, configs):
-    print ""
-    print "_--==== COMPARING RESULTS ====--_"
-    print ""
+def compare_images(file1, file2, pathbuilder):
+    """Compares two image files, returns True if compare took place, False otherwise
+    :param file1:
+    :param file2:
+    :return:
+    """
+    filename1 = os.path.basename(file1)
+    filename2 = os.path.basename(file2)
+    compare_name = str.format("{}__vs__{}".format(
+        os.path.splitext(filename1)[0], os.path.splitext(filename2)[0]))
+    skip_message = "SKIPPING {} (not found)...".format(compare_name)
+    if not os.path.exists(file1):
+        print skip_message
+        return False
+    if not os.path.exists(file2):
+        print skip_message
+        return False
 
-    # TODO: Need to do n-way compare for configs - hardcoding to 2 for now
-    assert pathbuilder, "No pathbuilder object!"
-    assert configs, "No configs!"
-    compare_configs(pathbuilder, configs)
+    diff = image.compare(file1, file2)
+    if diff > image.ERROR_THRESHOLD:
+        # Generate additional info in output
+        # TODO: Refactor to own function
+        mergedimg = image.merge_images(file1, file2)
+        info = { "name": compare_name, "diff": diff }
+        mergedimg2 = image.add_info(mergedimg, info)
+
+        merged_dir = os.path.join(pathbuilder.buildpath, "meta")
+        if not os.path.exists(merged_dir):
+            os.makedirs(merged_dir)
+        merged_path = os.path.join(merged_dir, compare_name + ".png")
+        if not os.path.exists(merged_path):
+            mergedimg2.save(open(merged_path, 'wb'))
+        print("ERROR: {} vs {} produced diff={}".format(
+            file1, file2, diff))
+        return False
+
+    return True
 
 
 def do_all_comparisons(cids=None, pids=None):
     cids = main.get_cids(cids=cids, pids=pids)
 
+    total_compares = 0
+    total_errors = 0
+    build = output.generate_build_string()
+    pb = output.PathBuilder(build=build)
+
     for cid in cids:
-        pb = output.PathBuilder(cid=cid)
+        pb.cid = cid
         comparisons = settings.DEFAULT.comparisons
         for compname in comparisons:
-            print("comparing set: {}...".format(compname))
+            print("")
+            print("*** Comparing set: {}...".format(compname))
             configs_to_compare = comparisons[compname]
-            compare_configs(pathbuilder=pb, configs=configs_to_compare)
+            errors, count = compare_configs(pathbuilder=pb, configs=configs_to_compare)
+            total_errors += errors
+            total_compares += count
+
+    print ""
+    print "*** RESULTS ***"
+    print "Compared {} images, found {} errors".format(total_compares, total_errors)
+    print "See additional logs at: {}".format(pb.buildpath)
 
 
 if __name__ == '__main__':

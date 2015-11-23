@@ -26,7 +26,7 @@ def testcampaign(cid):
     tags[cid] = tags_per_campaign
 
     # Use remote browsers
-    build = str.format("{}_{}", "tagcompare", time.strftime("%Y%m%d-%H%M%S"))
+    build = output.generate_build_string()
     configs = []
     for config in BROWSER_CONFIGS:
         config_data = BROWSER_CONFIGS[config]
@@ -38,7 +38,7 @@ def testcampaign(cid):
         pathbuilder = output.PathBuilder(config=config, cid=cid)
         webdriver.capture_tags_remotely(capabilities, tags, pathbuilder, build=build, name=config)
 
-    compare.compare_output(output.PathBuilder(cid=cid), configs=configs)
+    compare.compare_configs(output.PathBuilder(cid=cid, build=build), configs=configs)
 
 
 def get_cids(cids=None, pids=None):

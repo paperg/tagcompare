@@ -6,21 +6,27 @@
 import os
 
 import settings
+import time
 
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, 'output')
-TAG_NAME = "tag"  # constant name when storing image/html file
+BUILDS_DIR = os.path.join(OUTPUT_DIR, 'builds')
 
 
 class PathBuilder():
     """Class to store & build paths/partial paths to outputs of tagcompare
     """
     # TODO: Consider making this class immutable
-    def __init__(self, config=None, cid=None, size=None):
+    def __init__(self, config=None, cid=None, size=None, build=None):
         self.config = config
         self.cid = cid
         self.size = size
+
+        # TODO: Fix build/buildpath - consolidate it with the way we store builds by default
+        self.build = build
+        if not self.build:
+            self.build = generate_build_string()
 
     @property
     def path(self):
@@ -36,15 +42,26 @@ class PathBuilder():
         return result
 
     @property
+    def tagname(self):
+        result = str.format("{}-{}-{}", self.cid, self.size, self.config)
+        return result
+
+    @property
     def tagimage(self):
-        result = os.path.join(self.path, TAG_NAME + ".png")
+        result = os.path.join(self.path, self.tagname + ".png")
         return result
 
     @property
     def taghtml(self):
-        result = os.path.join(self.path, TAG_NAME + ".html")
+        result = os.path.join(self.path, self.tagname + ".html")
         return result
 
+    @property
+    def buildpath(self):
+        result = os.path.join(BUILDS_DIR, self.build)
+        if not os.path.exists(result):
+            os.makedirs(result)
+        return result
 
 """
 Static helper methods:
@@ -91,6 +108,10 @@ def getpath(config, cid=None, size=None):
     result = os.path.join(result, size)
     return result
 
+
+def generate_build_string():
+    build = str.format("{}_{}", "tagcompare", time.strftime("%Y%m%d-%H%M%S"))
+    return build
 
 if __name__ == '__main__':
     makedirs()
