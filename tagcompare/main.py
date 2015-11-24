@@ -22,6 +22,7 @@ def testcampaign(cid, pathbuilder):
         return
 
     tags[cid] = tags_per_campaign
+    print "Found {} tags for campaign {}".format(len(tags_per_campaign), cid)
 
     # Use remote browsers
     configs = []
@@ -48,7 +49,9 @@ def get_cids(cids=None, pids=None):
 
         cids = []
         for pid in pids:
-            cids = cids.append(placelocal.get_active_campaigns(pid))
+            new_cids = placelocal.get_active_campaigns(pid)
+            if new_cids:
+                cids += new_cids
     return cids
 
 
@@ -57,6 +60,7 @@ def main(cids=None, pids=None):
     build = output.generate_build_string()
     pathbuilder = output.PathBuilder(build=build)
     cids = get_cids(cids=cids, pids=pids)
+    print "Capturing tags for {} campaigns".format(len(cids))
     for cid in cids:
         testcampaign(cid=cid, pathbuilder=pathbuilder)
 

@@ -92,7 +92,7 @@
       }
     },
     "ie9": {
-      "enabled": true,
+      "enabled": false,
       "capabilities": {
         "platform": "Windows 7",
         "browserName": "internet explorer",

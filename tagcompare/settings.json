@@ -1,14 +1,14 @@
 {
   "placelocal": {
-    "domain": "www.placelocaldemo.com",
+    "domain": "www.placelocal.com",
     "secret": {
       "pl-secret": "SECRET",
       "pl-service-identifier": "ID"
     }
   },
-  "campaigns": [ 4795 ],
-  "publishers": [],
-  "tagsizes": [ "medium_rectangle", "skyscraper", "halfpage" ],
+  "campaigns": [ ],
+  "publishers": [ 627 ],
+  "tagsizes": [ "medium_rectangle", "skyscraper", "halfpage", "leaderboard" ],
   "webdriver": {
     "browserstack": {
       "enabled": false,

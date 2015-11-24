@@ -7,7 +7,6 @@ import requests
 import settings
 
 
-PL_TEST_PUBLISHER = "627"  # IHG!!
 TIMESTAMP = time.strftime("%Y%m%d-%H%M%S")
 PL_DOMAIN = settings.DEFAULT.domain
 
@@ -17,33 +16,24 @@ def _read_placelocal_api_headers():
     return headers
 
 
-def get_active_campaigns(pid=PL_TEST_PUBLISHER):
+def get_active_campaigns(pid):
     # TODO: Make this better
-    url = str.format("https://{}/{}/campaigns?status=active", PL_DOMAIN, PL_TEST_PUBLISHER)
+    url = str.format("https://{}/api/v2/publication/{}/campaigns?status=active", PL_DOMAIN, pid)
     r = requests.get(url, headers=_read_placelocal_api_headers())
     if r.status_code != 200:
-        print("getActiveCampaigns: Error code: %s" % r.status_code)
+        print("getActiveCampaigns {} - API error: {}".format(url, r))
         return None
 
     data = json.loads(r.text)
-    # print data
-    return data['data']['campaigns']
+    campaigns = data['data']['campaigns']
 
-
-def get_active_tags_for_publisher(pid=PL_TEST_PUBLISHER):
-    campaigns = get_active_campaigns()
-
-    if not campaigns:
-        return None
-
-    # print dir(campaigns)
-    all_tags = {}
+    # TODO: There's probably a better way to do this...
+    result = []
     for c in campaigns:
         cid = c['id']
-        tags = get_tags(cid)
-        all_tags[cid] = tags
-
-    return all_tags
+        result.append(cid)
+    print "Found {} active campaigns for publisher {}.  IDs: {}".format(len(campaigns), pid, result)
+    return result
 
 
 # Gets a set of tags for a campaign, the key is its size and the value is the tag HTML
@@ -75,7 +65,7 @@ def get_tags(cid):
             # print 'size: %s' % size
             tag = tags_data[size]['iframe']
             assert len(tag) > 0, "No tag data found!"
-            #print tag
+            # print tag
             result[size] = tag
 
         # print "result: " + str(result)
@@ -85,8 +75,25 @@ def get_tags(cid):
         return None
 
 
+def __get_active_tags_for_publisher(pid):
+    campaigns = get_active_campaigns(pid)
+
+    if not campaigns:
+        return None
+
+    # print dir(campaigns)
+    all_tags = {}
+    for c in campaigns:
+        cid = c['id']
+        tags = get_tags(cid)
+        all_tags[cid] = tags
+
+    return all_tags
+
+
+# TODO: Make test for this
 def test():
-    all_tags = get_active_tags_for_publisher()
+    all_tags = __get_active_tags_for_publisher()
     tag_count = len(all_tags)
     print "getActiveTagsForPublisher_test: Found {} tags".format(tag_count)
     assert tag_count > 0, "No tags found!"

@@ -9,7 +9,12 @@ ERROR_THRESHOLD = 300
 def compare(file1, file2):
     image1 = normalize_img(file1)
     image2 = normalize_img(file2)
-    result = _compare_img(image1, image2)
+
+    try:
+        result = _compare_img(image1, image2)
+    except IndexError:
+        print("compare failed for {} to {} due to index error".format(file1, file2))
+        return False
     # print "comparing {} to {}:\n{}".format(file1, file2, result)
     return result
 

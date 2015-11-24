@@ -70,13 +70,18 @@ def compare_images(file1, file2, pathbuilder):
         return None
 
     diff = image.compare(file1, file2)
+    if diff is False:
+        # Unable to produce diff due to errors
+        return False
+
     if diff > image.ERROR_THRESHOLD:
         # Generate additional info in output
         # TODO: Refactor to own function
         mergedimg = image.merge_images(file1, file2)
-        info = { "name": compare_name, "diff": diff }
+        info = {"name": compare_name, "diff": diff }
         mergedimg2 = image.add_info(mergedimg, info)
 
+        # TODO: Do something about per compare outputs - we aren't using pathbuilder anymore...
         merged_dir = os.path.join(output.OUTPUT_DIR, "compare")
         if not os.path.exists(merged_dir):
             os.makedirs(merged_dir)
