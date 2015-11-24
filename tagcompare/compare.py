@@ -31,20 +31,24 @@ def compare_configs(pathbuilder, configs):
     sizes = settings.DEFAULT.tagsizes
     count = 0
     errorcount = 0
+    skipcount = 0
 
     # Compare all combinations of configs
     for a, b in itertools.combinations(configs, 2):
         for s in sizes:
-            pba = output.PathBuilder(config=a, size=s, cid=pathbuilder.cid)
-            pbb = output.PathBuilder(config=b, size=s, cid=pathbuilder.cid)
+            pba = output.PathBuilder(build=pathbuilder.build, config=a, size=s, cid=pathbuilder.cid)
+            pbb = output.PathBuilder(build=pathbuilder.build, config=b, size=s, cid=pathbuilder.cid)
             pba_img = pba.tagimage
             pbb_img = pbb.tagimage
             count += 1
-            if not compare_images(pba_img, pbb_img, pathbuilder):
+            compare_result = compare_images(pba_img, pbb_img, pathbuilder)
+            if compare_result is None:
+                skipcount += 1
+            elif compare_result is False:
                 errorcount += 1
 
-    print "Compared {} images, {} with errors > {}".format(count, errorcount, image.ERROR_THRESHOLD)
-    return errorcount, count
+    print "Compared {} images: {} errors, {} skipped".format(count, errorcount, skipcount)
+    return errorcount, count, skipcount
 
 
 def compare_images(file1, file2, pathbuilder):
@@ -57,13 +61,13 @@ def compare_images(file1, file2, pathbuilder):
     filename2 = os.path.basename(file2)
     compare_name = str.format("{}__vs__{}".format(
         os.path.splitext(filename1)[0], os.path.splitext(filename2)[0]))
-    skip_message = "SKIPPING {} (not found)...".format(compare_name)
+    skip_message = "SKIPPING {}".format(compare_name)
     if not os.path.exists(file1):
-        print skip_message
-        return False
+        print str.format("{}.  {} not found!", skip_message, file1)
+        return None
     if not os.path.exists(file2):
-        print skip_message
-        return False
+        print str.format("{}.  {} not found!", skip_message, file2)
+        return None
 
     diff = image.compare(file1, file2)
     if diff > image.ERROR_THRESHOLD:
@@ -73,12 +77,12 @@ def compare_images(file1, file2, pathbuilder):
         info = { "name": compare_name, "diff": diff }
         mergedimg2 = image.add_info(mergedimg, info)
 
-        merged_dir = os.path.join(pathbuilder.buildpath, "meta")
+        merged_dir = os.path.join(output.OUTPUT_DIR, "compare")
         if not os.path.exists(merged_dir):
             os.makedirs(merged_dir)
         merged_path = os.path.join(merged_dir, compare_name + ".png")
-        if not os.path.exists(merged_path):
-            mergedimg2.save(open(merged_path, 'wb'))
+        print "Writing merged image file at {}".format(merged_path)
+        mergedimg2.save(open(merged_path, 'wb'))
         print("ERROR: {} vs {} produced diff={}".format(
             file1, file2, diff))
         return False
@@ -91,23 +95,25 @@ def do_all_comparisons(cids=None, pids=None):
 
     total_compares = 0
     total_errors = 0
-    build = output.generate_build_string()
-    pb = output.PathBuilder(build=build)
+    total_skipped = 0
+    # Always compare against the default which will have all the aggregated data
+    pb = output.PathBuilder(build=output.DEFAULT_BUILD_NAME)
 
     for cid in cids:
         pb.cid = cid
         comparisons = settings.DEFAULT.comparisons
-        for compname in comparisons:
+        for name in comparisons:
             print("")
-            print("*** Comparing set: {}...".format(compname))
-            configs_to_compare = comparisons[compname]
-            errors, count = compare_configs(pathbuilder=pb, configs=configs_to_compare)
+            print("*** Comparing set: {}...".format(name))
+            configs_to_compare = comparisons[name]
+            errors, count, skipped = compare_configs(pathbuilder=pb, configs=configs_to_compare)
             total_errors += errors
             total_compares += count
+            total_skipped += skipped
 
     print ""
     print "*** RESULTS ***"
-    print "Compared {} images, found {} errors".format(total_compares, total_errors)
+    print "Compared {} images: {} errors, {} skipped".format(total_compares, total_errors, total_skipped)
     print "See additional logs at: {}".format(pb.buildpath)
 
 

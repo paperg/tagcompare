@@ -14,3 +14,9 @@ run: install
 .PHONY: compare
 compare: install
 	cd tagcompare && python compare.py
+
+# Aggregates the output
+.PHONY: output
+output: install
+	cd tagcompare && python output.py
+

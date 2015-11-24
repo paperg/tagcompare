@@ -1,5 +1,3 @@
-import time
-
 import placelocal
 import webdriver
 import settings
@@ -16,7 +14,7 @@ WAIT_TIME_PER_AD = 7
 BROWSER_CONFIGS = settings.DEFAULT.configs
 
 
-def testcampaign(cid):
+def testcampaign(cid, pathbuilder):
     tags = {}
     tags_per_campaign = placelocal.get_tags(cid=cid)
     if not tags_per_campaign:
@@ -26,7 +24,6 @@ def testcampaign(cid):
     tags[cid] = tags_per_campaign
 
     # Use remote browsers
-    build = output.generate_build_string()
     configs = []
     for config in BROWSER_CONFIGS:
         config_data = BROWSER_CONFIGS[config]
@@ -35,10 +32,12 @@ def testcampaign(cid):
 
         configs.append(config)
         capabilities = config_data['capabilities']
-        pathbuilder = output.PathBuilder(config=config, cid=cid)
-        webdriver.capture_tags_remotely(capabilities, tags, pathbuilder, build=build, name=config)
+        pathbuilder.config = config
+        pathbuilder.cid = cid
+        webdriver.capture_tags_remotely(capabilities, tags, pathbuilder)
 
-    compare.compare_configs(output.PathBuilder(cid=cid, build=build), configs=configs)
+    output.aggregate()
+    compare.compare_configs(pathbuilder=pathbuilder, configs=configs)
 
 
 def get_cids(cids=None, pids=None):
@@ -55,9 +54,11 @@ def get_cids(cids=None, pids=None):
 
 def main(cids=None, pids=None):
     # Input is a PID (publisher id) or a list of CIDs (campaign Ids)
+    build = output.generate_build_string()
+    pathbuilder = output.PathBuilder(build=build)
     cids = get_cids(cids=cids, pids=pids)
     for cid in cids:
-        testcampaign(cid)
+        testcampaign(cid=cid, pathbuilder=pathbuilder)
 
 
 if __name__ == '__main__':

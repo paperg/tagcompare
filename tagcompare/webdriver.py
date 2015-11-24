@@ -108,13 +108,13 @@ def _screenshot(driver, output_path):
     return output_path
 
 
-def capture_tags_remotely(capabilities, tags, pathbuilder, build=None, name=None):
+def capture_tags_remotely(capabilities, tags, pathbuilder):
     """Captures screenshots for tags with remote webdriver
     """
 
     # Extra params to identify the build / job
-    capabilities['build'] = build
-    capabilities['name'] = name
+    capabilities['build'] = pathbuilder.build
+    capabilities['name'] = pathbuilder.config
 
     print "Starting browser with capabilities: {}...".format(capabilities)
     driver = setup_webdriver(remote=True, capabilities=capabilities)

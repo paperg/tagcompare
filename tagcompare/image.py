@@ -52,7 +52,7 @@ def add_info(image, info):
         x = line_height
         y += line_height
         text = "{}: {}".format(key, value)
-        print "drawing text {} at {},{}".format(text, x, y)
+        # print "drawing text {} at {},{}".format(text, x, y)
         draw.text(xy=(x, y), fill=(255, 255, 255), text=text)
     return result
 
