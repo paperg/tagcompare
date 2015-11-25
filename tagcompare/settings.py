@@ -4,6 +4,7 @@ import os
 
 DEFAULT_FILENAME = "settings.json"
 DEFAULT_LOCAL_FILENAME = "settings.local.json"
+DEFAULT_COMPARE_FILENAME = "compare.json"
 
 
 class Settings():
@@ -11,7 +12,7 @@ class Settings():
     reads settings.py and provides setting values to consumers
     """
 
-    def __init__(self, configfile=DEFAULT_LOCAL_FILENAME):
+    def __init__(self, configfile=DEFAULT_LOCAL_FILENAME, comparefile=DEFAULT_COMPARE_FILENAME):
         configfile_path = _get_abs_path(configfile)
 
         if not os.path.exists(configfile_path):
@@ -20,6 +21,7 @@ class Settings():
 
         self.__configfile = configfile_path
         self.__settings = None
+        self.__comparefile = comparefile
         self.__compare_set = None
 
 
@@ -73,19 +75,16 @@ class Settings():
         if self.__compare_set:
             return self.__compare_set
 
-        self.__compare_set = _load_json_file("compare.json")
+        self.__compare_set = _load_json_file(self.__comparefile)
         return self.__compare_set
-
 
     @property
     def comparisons(self):
         return self._compare_set['comparisons']
 
-
     @property
     def configs(self):
         return self._compare_set['configs']
-
 
     def configs_in_comparison(self):
         """Gets a list of unique configs from the comparisons matrix
@@ -109,6 +108,23 @@ def _get_abs_path(relpath):
 def _load_json_file(relpath):
     return json.load(open(_get_abs_path(relpath), "r"))
 
+
+# TODO: Probably avoid using this for now..
+def get_enabled_configs(configs):
+    """
+    Gets the list of enabled configs from the passed in list of configs
+    :param configs:
+    :return:
+    """
+    if isinstance(configs, list):
+        configs_set = DEFAULT.configs
+        result = [configs_set[c] for c in configs if configs_set[c]['enabled']]
+    elif isinstance(configs, dict):
+        result = [configs[c] for c in configs if configs[c]['enabled']]
+    else:
+        raise TypeError("configs is neither a list or set of configs!")
+
+    return result
 
 # TODO: not sure if this is proper...
 DEFAULT = Settings()

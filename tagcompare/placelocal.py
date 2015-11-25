@@ -7,7 +7,6 @@ import requests
 import settings
 
 
-PL_TEST_PUBLISHER = "627"  # IHG!!
 TIMESTAMP = time.strftime("%Y%m%d-%H%M%S")
 PL_DOMAIN = settings.DEFAULT.domain
 
@@ -17,37 +16,28 @@ def _read_placelocal_api_headers():
     return headers
 
 
-def get_active_campaigns(pid=PL_TEST_PUBLISHER):
+def get_active_campaigns(pid):
     # TODO: Make this better
-    url = str.format("https://{}/{}/campaigns?status=active", PL_DOMAIN, PL_TEST_PUBLISHER)
+    url = str.format("https://{}/api/v2/publication/{}/campaigns?status=active", PL_DOMAIN, pid)
     r = requests.get(url, headers=_read_placelocal_api_headers())
     if r.status_code != 200:
-        print("getActiveCampaigns: Error code: %s" % r.status_code)
+        print("getActiveCampaigns {} - API error: {}".format(url, r))
         return None
 
     data = json.loads(r.text)
-    # print data
-    return data['data']['campaigns']
+    campaigns = data['data']['campaigns']
 
-
-def get_active_tags_for_publisher(pid=PL_TEST_PUBLISHER):
-    campaigns = get_active_campaigns()
-
-    if not campaigns:
-        return None
-
-    # print dir(campaigns)
-    all_tags = {}
+    # TODO: There's probably a better way to do this...
+    result = []
     for c in campaigns:
         cid = c['id']
-        tags = get_tags(cid)
-        all_tags[cid] = tags
-
-    return all_tags
+        result.append(cid)
+    print "Found {} active campaigns for publisher {}.  IDs: {}".format(len(campaigns), pid, result)
+    return result
 
 
 # Gets a set of tags for a campaign, the key is its size and the value is the tag HTML
-def get_tags(cid):
+def __get_tags(cid):
     adsizes = ['smartphone_banner', 'skyscraper', 'halfpage', 'medium_rectangle', 'smartphone_wide_banner',
                'leaderboard']
     protocol = ['http_ad_tags', 'https_ad_tags']
@@ -57,7 +47,7 @@ def get_tags(cid):
     url = "https://{}/api/v2/campaign/{}/tags?".format(PL_DOMAIN, cid)
 
     # TODO: Note that animation time is set to 1 to make it static after 1s, but we only get last frame
-    qp = urlencode({"ispreview": 0, "isae": 0, "animationtime": 0, "usetagmacros": 0})
+    qp = urlencode({"ispreview": 0, "isae": 0, "animationtime": 1, "usetagmacros": 0})
     url += qp
     r = requests.get(url, headers=_read_placelocal_api_headers())
     if r.status_code != 200:
@@ -75,7 +65,7 @@ def get_tags(cid):
             # print 'size: %s' % size
             tag = tags_data[size]['iframe']
             assert len(tag) > 0, "No tag data found!"
-            #print tag
+            # print tag
             result[size] = tag
 
         # print "result: " + str(result)
@@ -85,8 +75,68 @@ def get_tags(cid):
         return None
 
 
+def __get_active_tags_for_publisher(pid):
+    campaigns = get_active_campaigns(pid)
+
+    if not campaigns:
+        return None
+
+    # print dir(campaigns)
+    all_tags = {}
+    for c in campaigns:
+        cid = c['id']
+        tags = __get_tags(cid)
+        all_tags[cid] = tags
+
+    return all_tags
+
+
+def get_tags_for_campaigns(cids):
+    """
+    Gets a set of tags for multiple campaigns in this form:
+
+    tags = {
+        "cid1": {
+            "size1": "<tag>html</tag>",
+            "size2": "<tag>html</tag>"...
+        },
+        "cid2": {...
+        }...
+    }
+    :param cids:
+    :return:
+    """
+
+    print "get_tags_for_campaigns: {}...  (this might take a while)".format(cids)
+    if not cids:
+        return None
+
+    total_tags = 0
+    result = {}
+    for cid in cids:
+        tags = __get_tags(cid)
+        result[cid] = tags
+        total_tags += len(tags)
+    return result, total_tags
+
+
+def get_cids(cids=None, pids=None):
+    # Input is a PID (publisher id) or a list of CIDs (campaign Ids)
+    if not cids:
+        if not pids:
+            raise ValueError("pid must be specified if there are no cids!")
+
+        cids = []
+        for pid in pids:
+            new_cids = get_active_campaigns(pid)
+            if new_cids:
+                cids += new_cids
+    return cids
+
+
+# TODO: Make test for this
 def test():
-    all_tags = get_active_tags_for_publisher()
+    all_tags = __get_active_tags_for_publisher()
     tag_count = len(all_tags)
     print "getActiveTagsForPublisher_test: Found {} tags".format(tag_count)
     assert tag_count > 0, "No tags found!"

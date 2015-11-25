@@ -1,36 +1,44 @@
-import os
-
 from tagcompare import output
+import pytest
 
 
 def test_pathbuilder_create():
-    pathbuilder = output.PathBuilder(config="test", cid=0, size="test")
-
+    pathbuilder = output.PathBuilder(config="testconfig", cid=0, size="testsize", build="testbuild")
     result = pathbuilder.create()
     print "result path: {}".format(result)
-    assert os.path.exists(result), "result path '{}' wasn't created!".format(result)
+    assert pathbuilder.pathexists(), "result path '{}' wasn't created!".format(result)
 
     # Make sure the structure is proper
-    configpath = os.path.join(output.OUTPUT_DIR, pathbuilder.config)
-    assert os.path.exists(configpath), "config path '{}' wasn't created!".format(configpath)
-    cidpath = os.path.join(configpath, str(pathbuilder.cid))
-    assert os.path.exists(cidpath), "cid path '{}' wasn't created!".format(cidpath)
-    sizepath = os.path.join(cidpath, pathbuilder.size)
-    assert os.path.exists(sizepath), "size path '{}' wasn't created!".format(sizepath)
-
-
-def test_pathbuilder_validate():
-    pathbuilder = output.PathBuilder(config="test", cid=0, size="test")
-    pathbuilder.create()
-    assert pathbuilder.validate()
+    _assert_correct_path(pathbuilder)
 
 
 def test_pathbuilder_path():
-    pathbuilder = output.PathBuilder(config="test", cid=0, size="test")
-    assert str(pathbuilder.path).endswith("output/test/0/test")
+    pathbuilder = output.PathBuilder(config="testconfig", cid=0, size="testsize", build="testbuild")
+    _assert_correct_path(pathbuilder)
 
     # Test we will get the right path after changing params
-    pathbuilder.cid = 9
-    assert str(pathbuilder.path).endswith("output/test/9/test")
-    pathbuilder.size = "test1"
-    assert str(pathbuilder.path).endswith("output/test/9/test1")
+    pathbuilder.cid = 9  # Check that using a int instead of str for cid is OK
+    _assert_correct_path(pathbuilder)
+    pathbuilder.size = "testsize1"
+    _assert_correct_path(pathbuilder)
+
+
+def test_aggregate():
+    result = output.aggregate()
+    assert result, "output.aggregate() was not successful!"
+
+
+def test_parse_path():
+    pathbuilder = output.PathBuilder(config="testconfig", cid=0, size="testsize", build="testbuild")
+    pathbuilder2 = output.PathBuilder(dirpath=pathbuilder.path)
+    assert pathbuilder2, "Could not initialize PathBuilder object with dirpath"
+    assert pathbuilder.path == pathbuilder2.path, "The paths don't match!"
+    assert pathbuilder == pathbuilder2, "PathBuilder equals did not match!"
+
+
+def _assert_correct_path(pathbuilder):
+    expectedstr = "output/{}/{}/{}/{}".format(
+        pathbuilder.build, pathbuilder.config, pathbuilder.cid, pathbuilder.size)
+    print "expected: {}".format(expectedstr)
+    print "actual: {}".format(pathbuilder.path)
+    assert str(pathbuilder.path).endswith(expectedstr)

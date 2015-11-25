@@ -1,7 +1,7 @@
-import traceback
 import time
 
 from selenium import webdriver
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -45,7 +45,7 @@ def _display_tag(driver, tag):
     # Wait until the load spinner goes away
     load_spinner_locator = (By.CSS_SELECTOR, "img[class*='pl-loader-'")
     wait_until_element_disappears(driver=driver, locator=load_spinner_locator)
-    time.sleep(3)  # For good measure
+    time.sleep(5)  # For good measure
 
 
 def _make_script(tag):
@@ -53,33 +53,6 @@ def _make_script(tag):
         .replace('\n', '').replace('\r', '').rstrip()
     # print script
     return script
-
-
-def _write_html(tag_html, output_path):
-    if not output_path.endswith('.html'):
-        output_path += ".html"
-
-    with open(output_path, 'w') as f:
-        f.write(tag_html)
-
-
-def _capture_tags(driver, tags, pathbuilder):
-    for cid in tags:
-        tags_per_campaign = tags[cid]
-        # print "debug: " + str(tags_per_campaign)
-        sizes = settings.DEFAULT.tagsizes
-        for tag_size in sizes:
-            tag_html = tags_per_campaign[tag_size]
-            _display_tag(driver, tag_html)
-
-            # Getting ready to write to files
-            pathbuilder.size = tag_size
-            pathbuilder.create()
-
-            # TODO: Only works for iframe tags atm
-            tag_element = driver.find_element_by_tag_name('iframe')
-            screenshot_element(driver, tag_element, pathbuilder.tagimage)
-            _write_html(tag_html=tag_html, output_path=pathbuilder.taghtml)
 
 
 def screenshot_element(driver, element, output_path):
@@ -106,24 +79,3 @@ def _screenshot(driver, output_path):
     print "capturing screenshot to {}".format(output_path)
     driver.get_screenshot_as_file(output_path)
     return output_path
-
-
-def capture_tags_remotely(capabilities, tags, pathbuilder, build=None, name=None):
-    """Captures screenshots for tags with remote webdriver
-    """
-
-    # Extra params to identify the build / job
-    capabilities['build'] = build
-    capabilities['name'] = name
-
-    print "Starting browser with capabilities: {}...".format(capabilities)
-    driver = setup_webdriver(remote=True, capabilities=capabilities)
-
-    try:
-        _capture_tags(driver, tags, pathbuilder)
-    # Catching generics here because we don't want to leak a browser
-    except Exception as e:
-        print "Exception caught while running display_tags: {}\n{}".format(e, traceback.format_exc())
-    finally:
-        # Make sure to always close the browser
-        driver.quit()
