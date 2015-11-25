@@ -1,6 +1,7 @@
 import time
 
 from selenium import webdriver
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -44,7 +45,7 @@ def _display_tag(driver, tag):
     # Wait until the load spinner goes away
     load_spinner_locator = (By.CSS_SELECTOR, "img[class*='pl-loader-'")
     wait_until_element_disappears(driver=driver, locator=load_spinner_locator)
-    time.sleep(3)  # For good measure
+    time.sleep(5)  # For good measure
 
 
 def _make_script(tag):

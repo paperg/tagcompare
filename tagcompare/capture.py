@@ -1,5 +1,3 @@
-import traceback
-
 import placelocal
 import webdriver
 import output
@@ -94,11 +92,18 @@ def __capture_tags(capabilities, tags, pathbuilder, capture_existing=False):
 
 
 def main(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.publishers):
+    """
+    Runs capture, returns the job name for the capture job
+    :param cids:
+    :param pids:
+    :return:
+    """
     build = output.generate_build_string()
     pathbuilder = output.PathBuilder(build=build)
     cids = placelocal.get_cids(cids=cids, pids=pids)
     output.aggregate()
     capture_tags_for_all_configs(cids=cids, pathbuilder=pathbuilder)
+    return pathbuilder.build
 
 
 if __name__ == '__main__':

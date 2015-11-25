@@ -3,8 +3,8 @@ import compare
 
 
 def main():
-    capture.main()
-    compare.main()
+    jobname = capture.main()
+    compare.main(jobname=jobname)
 
 
 if __name__ == '__main__':

@@ -3,6 +3,7 @@ from PIL import Image
 from PIL import ImageDraw
 import shutil
 
+# TODO: Make configurable
 ERROR_THRESHOLD = 300
 
 
