@@ -1,12 +1,10 @@
-import output
 import capture
 import compare
 
 
 def main():
     capture.main()
-    output.aggregate()
-    compare.do_all_comparisons()
+    compare.main()
 
 
 if __name__ == '__main__':

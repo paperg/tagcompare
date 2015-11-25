@@ -133,5 +133,10 @@ def do_all_comparisons(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.pu
     print "See additional logs at: {}".format(pb.buildpath)
 
 
-if __name__ == '__main__':
+def main():
+    output.aggregate()
     do_all_comparisons(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.publishers)
+
+
+if __name__ == '__main__':
+    main()

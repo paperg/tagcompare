@@ -97,6 +97,7 @@ def main(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.publishers):
     build = output.generate_build_string()
     pathbuilder = output.PathBuilder(build=build)
     cids = placelocal.get_cids(cids=cids, pids=pids)
+    output.aggregate()
     capture_tags_for_all_configs(cids=cids, pathbuilder=pathbuilder)
 
 
