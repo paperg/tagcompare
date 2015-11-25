@@ -16,7 +16,7 @@ import os
 import output
 import settings
 import image
-import main  # TODO: Probably not appropriate to import main
+import placelocal
 
 
 def compare_campaign(cid):
@@ -25,6 +25,7 @@ def compare_campaign(cid):
 
 
 def compare_configs(pathbuilder, configs):
+    # TODO: Should we check if configs are enabled before comparing?
     assert pathbuilder, "No pathbuilder object!"
     assert configs, "No configs!"
 
@@ -57,16 +58,12 @@ def compare_images(file1, file2, pathbuilder):
     :param file2:
     :return:
     """
-    filename1 = os.path.basename(file1)
-    filename2 = os.path.basename(file2)
-    compare_name = str.format("{}__vs__{}".format(
-        os.path.splitext(filename1)[0], os.path.splitext(filename2)[0]))
-    skip_message = "SKIPPING {}".format(compare_name)
+    compare_name = __get_compare_name(file1, file2)
     if not os.path.exists(file1):
-        print str.format("{}.  {} not found!", skip_message, file1)
+        print str.format("SKIPPING {} - {} not found!", compare_name, file1)
         return None
     if not os.path.exists(file2):
-        print str.format("{}.  {} not found!", skip_message, file2)
+        print str.format("SKIPPING {} - {} not found!", compare_name, file2)
         return None
 
     diff = image.compare(file1, file2)
@@ -75,28 +72,42 @@ def compare_images(file1, file2, pathbuilder):
         return False
 
     if diff > image.ERROR_THRESHOLD:
-        # Generate additional info in output
-        # TODO: Refactor to own function
-        mergedimg = image.merge_images(file1, file2)
-        info = {"name": compare_name, "diff": diff }
-        mergedimg2 = image.add_info(mergedimg, info)
-
-        # TODO: Do something about per compare outputs - we aren't using pathbuilder anymore...
-        merged_dir = os.path.join(output.OUTPUT_DIR, "compare")
-        if not os.path.exists(merged_dir):
-            os.makedirs(merged_dir)
-        merged_path = os.path.join(merged_dir, compare_name + ".png")
-        print "Writing merged image file at {}".format(merged_path)
-        mergedimg2.save(open(merged_path, 'wb'))
-        print("ERROR: {} vs {} produced diff={}".format(
-            file1, file2, diff))
+        __write_merged_image(file1, file2, diff, build=pathbuilder.build)
         return False
 
     return True
 
 
-def do_all_comparisons(cids=None, pids=None):
-    cids = main.get_cids(cids=cids, pids=pids)
+def __get_compare_name(file1, file2):
+    filename1 = os.path.basename(file1)
+    filename2 = os.path.basename(file2)
+    compare_name = str.format("{}__vs__{}".format(
+        os.path.splitext(filename1)[0], os.path.splitext(filename2)[0]))
+    return compare_name
+
+
+def __write_merged_image(file1, file2, diff, build):
+    compare_name = __get_compare_name(file1, file2)
+
+    # Generate additional info in output
+    # TODO: Refactor to own function
+    mergedimg = image.merge_images(file1, file2)
+    info = {"name": compare_name, "diff": diff}
+    mergedimg2 = image.add_info(mergedimg, info)
+
+    compare_dir = os.path.join(output.OUTPUT_DIR, "compare")
+    build_dir = os.path.join(compare_dir, build)
+    if not os.path.exists(build_dir):
+        os.makedirs(build_dir)
+    merged_path = os.path.join(build_dir, compare_name + ".png")
+    print "Writing merged image file at {}".format(merged_path)
+    mergedimg2.save(open(merged_path, 'wb'))
+    print("ERROR: {} vs {} produced diff={}".format(
+        file1, file2, diff))
+
+
+def do_all_comparisons(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.publishers):
+    cids = placelocal.get_cids(cids=cids, pids=pids)
 
     total_compares = 0
     total_errors = 0

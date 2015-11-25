@@ -37,7 +37,7 @@ def get_active_campaigns(pid):
 
 
 # Gets a set of tags for a campaign, the key is its size and the value is the tag HTML
-def get_tags(cid):
+def __get_tags(cid):
     adsizes = ['smartphone_banner', 'skyscraper', 'halfpage', 'medium_rectangle', 'smartphone_wide_banner',
                'leaderboard']
     protocol = ['http_ad_tags', 'https_ad_tags']
@@ -85,10 +85,49 @@ def __get_active_tags_for_publisher(pid):
     all_tags = {}
     for c in campaigns:
         cid = c['id']
-        tags = get_tags(cid)
+        tags = __get_tags(cid)
         all_tags[cid] = tags
 
     return all_tags
+
+
+def get_tags_for_campaigns(cids):
+    """
+    Gets a set of tags for multiple campaigns in this form:
+
+    tags = {
+        "cid1": {
+            "size1": "<tag>html</tag>",
+            "size2": "<tag>html</tag>"...
+        },
+        "cid2": {...
+        }...
+    }
+    :param cids:
+    :return:
+    """
+
+    if not cids:
+        return None
+
+    result = {}
+    for cid in cids:
+        result[cid] = __get_tags(cid)
+    return result
+
+
+def get_cids(cids=None, pids=None):
+    # Input is a PID (publisher id) or a list of CIDs (campaign Ids)
+    if not cids:
+        if not pids:
+            raise ValueError("pid must be specified if there are no cids!")
+
+        cids = []
+        for pid in pids:
+            new_cids = get_active_campaigns(pid)
+            if new_cids:
+                cids += new_cids
+    return cids
 
 
 # TODO: Make test for this
