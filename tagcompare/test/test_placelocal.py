@@ -3,9 +3,9 @@ from tagcompare import placelocal
 
 def test_get_tags_for_campaigns():
     cids = [516675, 509147]
-    tags = placelocal.get_tags_for_campaigns(cids=cids)
+    tags, count = placelocal.get_tags_for_campaigns(cids=cids)
     assert tags, "Did not get tags for cid {}!".format(cids)
-    print "Found {} tags for cid {}.".format(len(tags), cids)
+    print "Found {} tags for cid {}.".format(count, cids)
 
 
 def test_get_active_campaigns():

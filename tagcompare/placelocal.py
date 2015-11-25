@@ -107,13 +107,17 @@ def get_tags_for_campaigns(cids):
     :return:
     """
 
+    print "get_tags_for_campaigns: {}...  (this might take a while)".format(cids)
     if not cids:
         return None
 
+    total_tags = 0
     result = {}
     for cid in cids:
-        result[cid] = __get_tags(cid)
-    return result
+        tags = __get_tags(cid)
+        result[cid] = tags
+        total_tags += len(tags)
+    return result, total_tags
 
 
 def get_cids(cids=None, pids=None):

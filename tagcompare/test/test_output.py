@@ -1,4 +1,5 @@
 from tagcompare import output
+import pytest
 
 
 def test_pathbuilder_create():

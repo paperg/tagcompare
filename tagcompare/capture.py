@@ -6,34 +6,22 @@ import output
 import settings
 
 
-def __capture_tags_remote(capabilities, tags, pathbuilder):
-    """Captures screenshots for tags with remote webdriver
-    """
-
+def __start_webdriver_capture(capabilities, name, build):
     # Extra params to identify the build / job
-    capabilities['build'] = pathbuilder.build
-    capabilities['name'] = pathbuilder.config
-
+    capabilities['build'] = build
+    capabilities['name'] = name
     print "Starting browser with capabilities: {}...".format(capabilities)
     driver = webdriver.setup_webdriver(remote=True, capabilities=capabilities)
-
-    try:
-        _capture_tags(driver, tags, pathbuilder)
-    # Catching generics here because we don't want to leak a browser
-    except Exception as e:
-        print "Exception caught while running display_tags: {}\n{}".format(e, traceback.format_exc())
-    finally:
-        # Make sure to always close the browser
-        driver.quit()
+    return driver
 
 
 def capture_tags_for_all_configs(cids, pathbuilder):
-    all_tags = placelocal.get_tags_for_campaigns(cids=cids)
+    all_tags, num_tags = placelocal.get_tags_for_campaigns(cids=cids)
     if not all_tags:
         print "No tags found to capture!"
         return
 
-    print "Capturing {} tags for {} campaigns".format(len(all_tags), len(cids))
+    print "Capturing {} tags for {} campaigns".format(num_tags, len(cids))
 
     # Use remote browsers
     all_configs = settings.DEFAULT.configs
@@ -45,7 +33,7 @@ def capture_tags_for_all_configs(cids, pathbuilder):
 
         capabilities = config_data['capabilities']
         pathbuilder.config = config
-        __capture_tags_remote(capabilities, all_tags, pathbuilder)
+        __capture_tags(capabilities, all_tags, pathbuilder, capture_existing=False)
 
 
 def _write_html(tag_html, output_path):
@@ -56,23 +44,48 @@ def _write_html(tag_html, output_path):
         f.write(tag_html)
 
 
-def _capture_tags(driver, tags, pathbuilder):
+def __capture_tags(capabilities, tags, pathbuilder, capture_existing=False):
+    # TODO: OMG REFACTOR BETTER
+    num_existing_skipped = 0
+    num_captured = 0
     for cid in tags:
+        pathbuilder.cid = cid
         tags_per_campaign = tags[cid]
         # print "debug: " + str(tags_per_campaign)
         sizes = settings.DEFAULT.tagsizes
         for tag_size in sizes:
-            tag_html = tags_per_campaign[tag_size]
-            webdriver._display_tag(driver, tag_html)
+            pathbuilder.size = tag_size
+
+            # Check if we already have the files from default path
+            default_pb = pathbuilder.clone(build=output.DEFAULT_BUILD_NAME)
+            if default_pb.pathexists() and not capture_existing:
+                print "Skipping {}".format(default_pb.path)
+                num_existing_skipped += 1
+                continue
+
+            try:
+                driver = __start_webdriver_capture(capabilities, build=pathbuilder.build, name=pathbuilder.config)
+                tag_html = tags_per_campaign[tag_size]
+                webdriver._display_tag(driver, tag_html)
+            except Exception as e:
+                print("Exception {} while displaying tags".format(e))
+                if driver:
+                    driver.quit()
+                continue
 
             # Getting ready to write to files
-            pathbuilder.size = tag_size
             pathbuilder.create()
-
             # TODO: Only works for iframe tags atm
-            tag_element = driver.find_element_by_tag_name('iframe')
-            webdriver.screenshot_element(driver, tag_element, pathbuilder.tagimage)
+            try:
+                tag_element = driver.find_element_by_tag_name('iframe')
+                webdriver.screenshot_element(driver, tag_element, pathbuilder.tagimage)
+            except Exception as e:
+                print "Exception while getting screenshot for tag: {}".format(pathbuilder.path)
+                continue
+
             _write_html(tag_html=tag_html, output_path=pathbuilder.taghtml)
+            num_captured += 1
+    print "_capture_tags captured {} tags, skipped {} existing tags".format(num_captured, num_existing_skipped)
 
 
 def main(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.publishers):
