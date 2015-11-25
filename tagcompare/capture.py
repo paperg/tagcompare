@@ -81,7 +81,12 @@ def __capture_tags(capabilities, tags, pathbuilder, capture_existing=False):
                 webdriver.screenshot_element(driver, tag_element, pathbuilder.tagimage)
             except Exception as e:
                 print "Exception while getting screenshot for tag: {}".format(pathbuilder.path)
+                if driver:
+                    driver.quit()
                 continue
+
+            if driver:
+                driver.quit()
 
             _write_html(tag_html=tag_html, output_path=pathbuilder.taghtml)
             num_captured += 1
