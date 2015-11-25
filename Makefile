@@ -3,7 +3,7 @@ install:
 
 .PHONY: test
 test: install
-	PYTHONPATH=. py.test -s
+	PYTHONPATH=. py.test -s --cov-config .coveragerc --cov=tagcompare tagcompare/test/
 
 # Do a funn run including gather image and compare them
 .PHONY: run
