@@ -38,15 +38,3 @@ def test_comparisons_matches_configs():
     for c in unique_configs:
         assert c in configs
 
-
-def test_get_enabled_configs_set():
-    configs = SETTINGS.configs
-    print "WTFTYPE {}".format(type(configs))
-    enabled_configs = settings.get_enabled_configs(configs)
-    assert len(configs) == len(enabled_configs) + 2, "Enabled configs should be 2 less than all configs!"
-    print "enabled_configs: {}".format(enabled_configs)
-    configs2 = SETTINGS.configs_in_comparison()
-    print "WTFTYPE2 {}".format(type(configs2))
-    enabled_configs = settings.get_enabled_configs(configs2)
-    assert len(configs) == len(enabled_configs) + 2, "Enabled configs should be 2 less than all configs!"
-    print "enabled_configs: {}".format(enabled_configs)

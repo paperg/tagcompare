@@ -3,8 +3,11 @@ from PIL import Image
 from PIL import ImageDraw
 import shutil
 
+import logger
+
 # TODO: Make configurable
 ERROR_THRESHOLD = 300
+LOGGER = logger.Logger(__name__).get()
 
 
 def compare(file1, file2):
@@ -13,10 +16,11 @@ def compare(file1, file2):
 
     try:
         result = _compare_img(image1, image2)
+        LOGGER.debug("compare_img result: %s", result)
     except IndexError:
-        print("compare failed for {} to {} due to index error".format(file1, file2))
+        LOGGER.exception("compare failed for %s to %s due to index error",
+                         file1, file2)
         return False
-    # print "comparing {} to {}:\n{}".format(file1, file2, result)
     return result
 
 
@@ -58,7 +62,7 @@ def add_info(image, info):
         x = line_height
         y += line_height
         text = "{}: {}".format(key, value)
-        # print "drawing text {} at {},{}".format(text, x, y)
+        LOGGER.debug("drawing text %s at %s,%s", text, x, y)
         draw.text(xy=(x, y), fill=(255, 255, 255), text=text)
     return result
 

@@ -5,10 +5,12 @@ import time
 import requests
 
 import settings
+import logger
 
 
 TIMESTAMP = time.strftime("%Y%m%d-%H%M%S")
 PL_DOMAIN = settings.DEFAULT.domain
+LOGGER = logger.Logger(__name__).get()
 
 
 def _read_placelocal_api_headers():
@@ -18,11 +20,12 @@ def _read_placelocal_api_headers():
 
 def get_active_campaigns(pid):
     # TODO: Make this better
-    url = str.format("https://{}/api/v2/publication/{}/campaigns?status=active", PL_DOMAIN, pid)
+    url = str.format("https://{}/api/v2/publication/{}/campaigns?status=active",
+                     PL_DOMAIN, pid)
     r = requests.get(url, headers=_read_placelocal_api_headers())
     if r.status_code != 200:
-        print("getActiveCampaigns {} - API error: {}".format(url, r))
-        return None
+        LOGGER.error("getActiveCampaigns %s - API error: %s", url, r)
+        return []
 
     data = json.loads(r.text)
     campaigns = data['data']['campaigns']
@@ -32,13 +35,15 @@ def get_active_campaigns(pid):
     for c in campaigns:
         cid = c['id']
         result.append(cid)
-    print "Found {} active campaigns for publisher {}.  IDs: {}".format(len(campaigns), pid, result)
+    LOGGER.debug("Found %s active campaigns for publisher %s.  IDs: %s",
+                 len(campaigns), pid, result)
     return result
 
 
 # Gets a set of tags for a campaign, the key is its size and the value is the tag HTML
 def __get_tags(cid):
-    adsizes = ['smartphone_banner', 'skyscraper', 'halfpage', 'medium_rectangle', 'smartphone_wide_banner',
+    adsizes = ['smartphone_banner', 'skyscraper', 'halfpage',
+               'medium_rectangle', 'smartphone_wide_banner',
                'leaderboard']
     protocol = ['http_ad_tags', 'https_ad_tags']
     type = ['iframe', 'script']
@@ -47,31 +52,32 @@ def __get_tags(cid):
     url = "https://{}/api/v2/campaign/{}/tags?".format(PL_DOMAIN, cid)
 
     # TODO: Note that animation time is set to 1 to make it static after 1s, but we only get last frame
-    qp = urlencode({"ispreview": 0, "isae": 0, "animationtime": 1, "usetagmacros": 0})
+    qp = urlencode(
+        {"ispreview": 0, "isae": 0, "animationtime": 1, "usetagmacros": 0})
     url += qp
     r = requests.get(url, headers=_read_placelocal_api_headers())
     if r.status_code != 200:
-        print("getTags: error: %s" % r)
+        LOGGER.error("getTags: error: %s", r)
         return None
 
     try:
         tags_data = json.loads(r.text)['data']['http_ad_tags']
         if not tags_data:
-            print("No tags found for cid {}, tags data: {}".format(cid, tags_data))
+            LOGGER.warning("No tags found for cid %s, tags data: %s", cid,
+                           tags_data)
             return None
 
         result = {}
         for size in adsizes:
-            # print 'size: %s' % size
             tag = tags_data[size]['iframe']
             assert len(tag) > 0, "No tag data found!"
-            # print tag
+            LOGGER.debug("size: %s, tag: %s", size, tag)
             result[size] = tag
 
-        # print "result: " + str(result)
+        LOGGER.debug("result: %s", result)
         return result
     except KeyError as e:
-        print "missing %s from response!" % (e, )
+        LOGGER.exception("Missing %s from response!", e)
         return None
 
 
@@ -81,7 +87,6 @@ def __get_active_tags_for_publisher(pid):
     if not campaigns:
         return None
 
-    # print dir(campaigns)
     all_tags = {}
     for c in campaigns:
         cid = c['id']
@@ -107,7 +112,9 @@ def get_tags_for_campaigns(cids):
     :return:
     """
 
-    print "get_tags_for_campaigns: {}...  (this might take a while)".format(cids)
+    LOGGER.info(
+        "get_tags_for_campaigns (%s campaigns): %s...  (this might take a while)",
+        len(cids), cids)
     if not cids:
         return None
 
@@ -138,7 +145,7 @@ def get_cids(cids=None, pids=None):
 def test():
     all_tags = __get_active_tags_for_publisher()
     tag_count = len(all_tags)
-    print "getActiveTagsForPublisher_test: Found {} tags".format(tag_count)
+    LOGGER.debug("getActiveTagsForPublisher_test: Found %s tags", tag_count)
     assert tag_count > 0, "No tags found!"
 
 
