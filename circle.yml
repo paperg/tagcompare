@@ -1,11 +1,3 @@
 machine:
   python:
     version: 2.7.6
-
-dependencies:
-  override:
-    - make install
-
-test:
-  override:
-    - make test
