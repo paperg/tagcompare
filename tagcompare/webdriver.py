@@ -8,6 +8,9 @@ from selenium.webdriver.support import expected_conditions as EC
 
 import settings
 import image
+import logger
+
+LOGGER = logger.Logger(name=__name__).get()
 
 
 def _read_remote_webdriver_key():
@@ -38,7 +41,7 @@ def wait_until_element_disappears(driver, locator):
         EC.invisibility_of_element_located(locator=locator))
 
 
-def _display_tag(driver, tag):
+def display_tag(driver, tag):
     script = _make_script(tag)
     driver.execute_script(script)
 
@@ -51,13 +54,12 @@ def _display_tag(driver, tag):
 def _make_script(tag):
     script = "document.body.innerHTML=\"{}\";".format(tag) \
         .replace('\n', '').replace('\r', '').rstrip()
-    # print script
+    LOGGER.debug("_make_script: %s", script)
     return script
 
 
 def screenshot_element(driver, element, output_path):
     """Take a screenshot of a specific webelement
-    http://stackoverflow.com/questions/15018372/how-to-take-partial-screenshot-with-selenium-webdriver-in-python
     """
     size = element.size
     location = element.location
@@ -76,6 +78,6 @@ def screenshot_element(driver, element, output_path):
 def _screenshot(driver, output_path):
     if not output_path.endswith('.png'):
         output_path += ".png"
-    print "capturing screenshot to {}".format(output_path)
+    LOGGER.debug("capturing screenshot to %s", output_path)
     driver.get_screenshot_as_file(output_path)
     return output_path

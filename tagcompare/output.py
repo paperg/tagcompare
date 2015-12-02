@@ -8,25 +8,32 @@ import time
 import glob
 from distutils import dir_util
 
+import logger
+
+
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, 'output')
 DEFAULT_BUILD_NAME = "default"
 DEFAULT_BUILD_PATH = os.path.join(OUTPUT_DIR, DEFAULT_BUILD_NAME)
+
+COMPARE_NAME = "compare"
+COMPARE_PATH = os.path.join(OUTPUT_DIR, COMPARE_NAME)
+
+LOGGER = logger.Logger(name=__name__, writefile=False).get()
 
 
 class PathBuilder():
     """Class to store & build paths/partial paths to outputs of tagcompare
     """
     # TODO: Consider making this class immutable
-    def __init__(self, build=None, config=None, cid=None, size=None, dirpath=None):
+    def __init__(self, build=None, config=None, cid=None, size=None,
+                 dirpath=None):
         if dirpath:
             self.__parse(dirpath)
         else:
             self.config = config
             self.cid = cid
             self.size = size
-
-            # TODO: Fix build/buildpath - consolidate it with the way we store builds by default
             self.__build = build
             if not self.__build:
                 raise ValueError('build must be set!')
@@ -47,7 +54,9 @@ class PathBuilder():
         :param dirpath: should be a real path ending in 'output/{build}/{config}/{cid}/{size}/'
         """
         if not dirpath or not isinstance(dirpath, basestring):
-            raise ValueError('path is not defined or not a string.  path: {}'.format(dirpath))
+            raise ValueError(
+                'path is not defined or not a string.  path: {}'.format(
+                    dirpath))
         if not os.path.exists(dirpath):
             raise ValueError('path does not exist!  path: {}'.format(dirpath))
 
@@ -57,7 +66,10 @@ class PathBuilder():
         tmp_path = dirpath
         for i in range(0, 4):
             parts = os.path.split(tmp_path)
-            assert len(parts) == 2, "Not enough parts to the path! parts={}, dirpath={}".format(parts, dirpath)
+            assert len(
+                parts) == 2, \
+                "Not enough parts to the path! parts={}, dirpath={}".format(
+                parts, dirpath)
             tmp_path = parts[0]
             allparts.insert(0, parts[1])
 
@@ -151,68 +163,20 @@ Static helper methods:
 """
 
 
-def __build_output_tree():
-    """
-    # Build a tree from all existing builds with format:
-    all_configs = {
-        "config1": {
-            "campaign1": {
-                "size1": "path/to/size"
-                }
-            }
-        }
-    """
-    # TODO: Delete since this is not really being used
-    aggregate()
-    all_configs = {}
-    all_paths = glob.glob("output/default/*/*/*/")
-    total_path_count = 0
-    print "Found {} build paths".format(len(all_paths))
-    for bp in all_paths:
-        path_obj = PathBuilder(dirpath=bp)
-        config = path_obj.config
-        cid = path_obj.cid
-        size = path_obj.size
-        path = path_obj.path
-
-        if not config in all_configs:
-            all_configs[config] = {
-                cid: {
-                    size: path
-                }
-            }
-        else:
-            tmp_config = all_configs[config]
-            if not cid in tmp_config:
-                tmp_config[cid] = {
-                    size: path
-                }
-            else:
-                tmp_campaign = tmp_config[cid]
-                if not size in tmp_campaign:
-                    tmp_campaign[size] = path
-                    total_path_count += 1
-                else:
-                    # Ignore duplicate entry
-                    continue
-
-    # print "Found {} existing configs: \n{}".format(len(all_configs), all_configs)
-    return all_configs
-
-
 def aggregate():
     """
     Aggregates the captures from various campaigns to the 'default'
     :return:
     """
     buildpaths = glob.glob('output/tagcompare*/')
+    LOGGER.info("Aggregating build data to %s", DEFAULT_BUILD_PATH)
     for buildpath in buildpaths:
         if str(buildpath).endswith(DEFAULT_BUILD_NAME + "/"):
             # Don't do this for the default build
             continue
 
         abs_buildpath = os.path.join(BASE_DIR, buildpath)
-        print "Copying from {} to {}".format(abs_buildpath, DEFAULT_BUILD_PATH)
+        LOGGER.debug("Copying from %s to %s", abs_buildpath, DEFAULT_BUILD_PATH)
         dir_util.copy_tree(abs_buildpath, DEFAULT_BUILD_PATH, update=1)
     return True
 

@@ -1,10 +1,14 @@
 import json
 import os
+import logging
 
 
 DEFAULT_FILENAME = "settings.json"
 DEFAULT_LOCAL_FILENAME = "settings.local.json"
 DEFAULT_COMPARE_FILENAME = "compare.json"
+
+LOG_DIR = "output"
+LOG_LEVEL = logging.INFO
 
 
 class Settings():
@@ -12,8 +16,13 @@ class Settings():
     reads settings.py and provides setting values to consumers
     """
 
-    def __init__(self, configfile=DEFAULT_LOCAL_FILENAME, comparefile=DEFAULT_COMPARE_FILENAME):
+    def __init__(self, configfile=DEFAULT_LOCAL_FILENAME,
+                 comparefile=DEFAULT_COMPARE_FILENAME):
         configfile_path = _get_abs_path(configfile)
+
+        logs_dir = _get_abs_path(LOG_DIR)
+        if not os.path.exists(logs_dir):
+            os.makedirs(logs_dir)
 
         if not os.path.exists(configfile_path):
             # Use default config file if no override
@@ -31,7 +40,9 @@ class Settings():
             return self.__settings
 
         assert self.__configfile, "No config file specified!"
-        assert os.path.exists(self.__configfile), "Settings file not found at {}".format(self.__configfile)
+        assert os.path.exists(
+            self.__configfile), "Settings file not found at {}".format(
+            self.__configfile)
         self.__settings = json.load(open(self.__configfile, "r"))
         return self.__settings
 
@@ -108,23 +119,6 @@ def _get_abs_path(relpath):
 def _load_json_file(relpath):
     return json.load(open(_get_abs_path(relpath), "r"))
 
-
-# TODO: Probably avoid using this for now..
-def get_enabled_configs(configs):
-    """
-    Gets the list of enabled configs from the passed in list of configs
-    :param configs:
-    :return:
-    """
-    if isinstance(configs, list):
-        configs_set = DEFAULT.configs
-        result = [configs_set[c] for c in configs if configs_set[c]['enabled']]
-    elif isinstance(configs, dict):
-        result = [configs[c] for c in configs if configs[c]['enabled']]
-    else:
-        raise TypeError("configs is neither a list or set of configs!")
-
-    return result
 
 # TODO: not sure if this is proper...
 DEFAULT = Settings()
