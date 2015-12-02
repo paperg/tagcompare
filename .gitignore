@@ -1,2 +1,6 @@
 /.cache
 .coverage
+*.pyc
+/*.egg-info
+/.eggs/
+/.tox/
