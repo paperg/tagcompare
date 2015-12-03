@@ -4,17 +4,15 @@
         - Browser usage stats: http://www.w3schools.com/browsers/browsers_stats.asp
 
     Configs are made based on supported capabilities:
-        - saucelabs: https://wiki.saucelabs.com/display/DOCS/Platform+Configurator#/
-        - browserstack: https://www.browserstack.com/list-of-browsers-and-platforms?product=automate
-
-:return:
+    - saucelabs:
+    https://wiki.saucelabs.com/display/DOCS/Platform+Configurator#/
+    - browserstack:
+    https://www.browserstack.com/list-of-browsers-and-platforms?product=automate
 """
-
 import itertools
 import os
 
 import logger
-
 import output
 import settings
 import image

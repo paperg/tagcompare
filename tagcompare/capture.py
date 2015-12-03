@@ -48,8 +48,42 @@ def _write_html(tag_html, output_path):
         f.write(tag_html)
 
 
+def __capture_tag(pathbuilder, tags_per_campaign, tagsize, capabilities,
+                  capture_existing=False):
+    pathbuilder.size = tagsize
+
+    # Check if we already have the files from default path
+    default_pb = pathbuilder.clone(build=output.DEFAULT_BUILD_NAME)
+    if default_pb.pathexists() and not capture_existing:
+        LOGGER.debug("Skipping existing captures %s", default_pb.path)
+        return False
+
+    with __start_webdriver_capture(capabilities,
+                                   build=pathbuilder.build,
+                                   name=pathbuilder.config) as driver:
+        try:
+            tag_html = tags_per_campaign[tagsize]
+            webdriver.display_tag(driver, tag_html)
+        except Exception:
+            LOGGER.exception("Exception while displaying tags!")
+            return None
+
+        # Getting ready to write to files
+        pathbuilder.create()
+        # TODO: Only works for iframe tags atm
+        try:
+            tag_element = driver.find_element_by_tag_name('iframe')
+            webdriver.screenshot_element(driver, tag_element,
+                                         pathbuilder.tagimage)
+        except Exception:
+            LOGGER.exception(
+                "Exception while getting screenshot for tag: %s",
+                pathbuilder.path)
+            return None
+    _write_html(tag_html=tag_html, output_path=pathbuilder.taghtml)
+
+
 def __capture_tags(capabilities, tags, pathbuilder, capture_existing=False):
-    # TODO: OMG REFACTOR BETTER
     num_existing_skipped = 0
     num_captured = 0
     for cid in tags:
@@ -57,51 +91,18 @@ def __capture_tags(capabilities, tags, pathbuilder, capture_existing=False):
         tags_per_campaign = tags[cid]
         LOGGER.debug("tags_per_campaign: %s", str(tags_per_campaign))
         sizes = settings.DEFAULT.tagsizes
-        for tag_size in sizes:
-            pathbuilder.size = tag_size
-
-            # Check if we already have the files from default path
-            default_pb = pathbuilder.clone(build=output.DEFAULT_BUILD_NAME)
-            if default_pb.pathexists() and not capture_existing:
-                LOGGER.debug("Skipping existing captures %s", default_pb.path)
+        for tagsize in sizes:
+            r = __capture_tag(pathbuilder=pathbuilder,
+                              tags_per_campaign=tags_per_campaign, tagsize=tagsize,
+                              capabilities=capabilities,
+                              capture_existing=capture_existing)
+            if r is False:
                 num_existing_skipped += 1
-                continue
-
-            try:
-                driver = __start_webdriver_capture(capabilities,
-                                                   build=pathbuilder.build,
-                                                   name=pathbuilder.config)
-                tag_html = tags_per_campaign[tag_size]
-                webdriver.display_tag(driver, tag_html)
-            except Exception as e:
-                LOGGER.exception("Exception while displaying tags!")
-                if driver:
-                    driver.quit()
-                continue
-
-            # Getting ready to write to files
-            pathbuilder.create()
-            # TODO: Only works for iframe tags atm
-            try:
-                tag_element = driver.find_element_by_tag_name('iframe')
-                webdriver.screenshot_element(driver, tag_element,
-                                             pathbuilder.tagimage)
-            except Exception as e:
-                LOGGER.exception(
-                    "Exception while getting screenshot for tag: %s",
-                    pathbuilder.path)
-                if driver:
-                    driver.quit()
-                continue
-
-            if driver:
-                driver.quit()
-
-            _write_html(tag_html=tag_html, output_path=pathbuilder.taghtml)
-            num_captured += 1
+            elif r is True:
+                num_captured += 1
     LOGGER.info(
         "Captured %s tags, skipped %s existing tags for config=%s",
-                num_captured, num_existing_skipped, capabilities)
+        num_captured, num_existing_skipped, capabilities)
 
 
 def main(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.publishers):

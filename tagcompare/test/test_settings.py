@@ -1,7 +1,8 @@
 from tagcompare import settings
 
 
-SETTINGS = settings.Settings(configfile='test/test_settings.json', comparefile='test/test_compare.json')
+SETTINGS = settings.Settings(configfile='test/test_settings.json',
+                             comparefile='test/test_compare.json')
 
 
 def test_config():
@@ -37,4 +38,3 @@ def test_comparisons_matches_configs():
     unique_configs = SETTINGS.configs_in_comparison()
     for c in unique_configs:
         assert c in configs
-

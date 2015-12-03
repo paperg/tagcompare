@@ -39,8 +39,6 @@ setup(
     package_data={
         '': ['*.json'],
     },
-    tests_require=['tox',
-                   'pytest',
-                   'pytest-cov'],
+    tests_require=['tox'],
     cmdclass={'test': Tox},
 )
