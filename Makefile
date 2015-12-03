@@ -3,6 +3,10 @@ install:
 
 .PHONY: test
 test: install
+	PYTHONPATH=. py.test -s -m "not integration" --cov-config .coveragerc --cov-report term-missing --cov=tagcompare tagcompare/test/
+
+.PHONY: test-all
+test-all: install
 	PYTHONPATH=. py.test -s --cov-config .coveragerc --cov-report term-missing --cov=tagcompare tagcompare/test/
 
 # Do a funn run including gather image and compare them
