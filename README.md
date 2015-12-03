@@ -1,4 +1,4 @@
-[![Code Climate](https://codeclimate.com/github/d3ming/tagcompare/badges/gpa.svg)](https://codeclimate.com/github/d3ming/tagcompare)
+[![Circle CI](https://circleci.com/gh/paperg/tagcompare/tree/master.svg?style=shield&circle-token=2ab0b5bce0728be579eb7aba17e52668e7ebf031)](https://circleci.com/gh/paperg/tagcompare/tree/master)[![Code Climate](https://codeclimate.com/github/d3ming/tagcompare/badges/gpa.svg)](https://codeclimate.com/github/d3ming/tagcompare)
 [![Test Coverage](https://codeclimate.com/github/d3ming/tagcompare/badges/coverage.svg)](https://codeclimate.com/github/d3ming/tagcompare/coverage)
 [![Issue Count](https://codeclimate.com/github/d3ming/tagcompare/badges/issue_count.svg)](https://codeclimate.com/github/d3ming/tagcompare)
 
