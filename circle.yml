@@ -1,3 +1,8 @@
 machine:
   python:
     version: 2.7.6
+
+test:
+  override:
+    - tox
+    - coveralls
