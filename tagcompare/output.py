@@ -10,7 +10,6 @@ from distutils import dir_util
 
 import logger
 
-
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, 'output')
 DEFAULT_BUILD_NAME = "default"
@@ -47,11 +46,12 @@ class PathBuilder():
         # TODO: Handle cases where not all values are initialized
         return self.path
 
-
     def __parse(self, dirpath):
         """
-        Given a 'dirpath' which corresponds to a path produced by PathBuilder, make the PathBuilder object
-        :param dirpath: should be a real path ending in 'output/{build}/{config}/{cid}/{size}/'
+        Given a 'dirpath' which corresponds to a path produced by PathBuilder,
+        make the PathBuilder object
+        :param dirpath: should be a real path ending in
+        'output/{build}/{config}/{cid}/{size}/'
         """
         if not dirpath or not isinstance(dirpath, basestring):
             raise ValueError(
@@ -69,7 +69,7 @@ class PathBuilder():
             assert len(
                 parts) == 2, \
                 "Not enough parts to the path! parts={}, dirpath={}".format(
-                parts, dirpath)
+                    parts, dirpath)
             tmp_path = parts[0]
             allparts.insert(0, parts[1])
 

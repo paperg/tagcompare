@@ -2,7 +2,8 @@ from tagcompare import output
 
 
 def test_pathbuilder_create():
-    pathbuilder = output.PathBuilder(config="testconfig", cid=0, size="testsize", build="testbuild")
+    pathbuilder = output.PathBuilder(config="testconfig", cid=0, size="testsize",
+                                     build="testbuild")
     result = pathbuilder.create()
     print "result path: {}".format(result)
     assert pathbuilder.pathexists(), "result path '{}' wasn't created!".format(result)
@@ -12,7 +13,8 @@ def test_pathbuilder_create():
 
 
 def test_pathbuilder_path():
-    pathbuilder = output.PathBuilder(config="testconfig", cid=0, size="testsize", build="testbuild")
+    pathbuilder = output.PathBuilder(config="testconfig", cid=0, size="testsize",
+                                     build="testbuild")
     _assert_correct_path(pathbuilder)
 
     # Test we will get the right path after changing params
@@ -28,7 +30,8 @@ def test_aggregate():
 
 
 def test_parse_path():
-    pathbuilder = output.PathBuilder(config="testconfig", cid=0, size="testsize", build="testbuild")
+    pathbuilder = output.PathBuilder(config="testconfig", cid=0, size="testsize",
+                                     build="testbuild")
     pathbuilder2 = output.PathBuilder(dirpath=pathbuilder.path)
     assert pathbuilder2, "Could not initialize PathBuilder object with dirpath"
     assert pathbuilder.path == pathbuilder2.path, "The paths don't match!"

@@ -31,6 +31,7 @@ def test_init_invalid_params():
     with pytest.raises(ValueError):
         testlogger = logger.Logger(name="test6")
         filename = testlogger.filepath
+        print filename
 
 
 def test_logger_name():

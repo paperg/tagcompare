@@ -1,5 +1,5 @@
 [run]
-omit = tagcompare/test/*,tagcompare/main.py,tagcompare/webdriver.py
+omit = tagcompare/test/*,tagcompare/main.py
 
 [report]
 exclude_lines =

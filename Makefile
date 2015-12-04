@@ -1,12 +1,16 @@
 install:
-	pip install -r requirements.txt
+	pip install -r requirements.txt -q
+
+.PHONY: flake
+flake: install
+	flake8
 
 .PHONY: test
-test: install
+test: install flake
 	PYTHONPATH=. py.test -s -m "not integration" --cov-config .coveragerc --cov-report=term-missing --cov=tagcompare tagcompare/test/
 
 .PHONY: test-all
-test-all: install
+test-all: install flake
 	PYTHONPATH=. py.test -s --cov-config .coveragerc --cov-report=term-missing --cov=tagcompare tagcompare/test/
 
 # Do a funn run including gather image and compare them

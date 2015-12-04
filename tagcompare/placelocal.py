@@ -40,18 +40,21 @@ def get_active_campaigns(pid):
     return result
 
 
-# Gets a set of tags for a campaign, the key is its size and the value is the tag HTML
 def __get_tags(cid):
+    """
+    Gets a set of tags for a campaign, the key is its size and the value is the tag HTML
+    :param cid:
+    :return:
+    """
     adsizes = ['smartphone_banner', 'skyscraper', 'halfpage',
                'medium_rectangle', 'smartphone_wide_banner',
                'leaderboard']
-    protocol = ['http_ad_tags', 'https_ad_tags']
-    type = ['iframe', 'script']
-
-    # TODO: hardcoding config params is bad
+    # TODO: Support different protocol / tag type
+    # protocol = ['http_ad_tags', 'https_ad_tags']
+    # type = ['iframe', 'script']
     url = "https://{}/api/v2/campaign/{}/tags?".format(PL_DOMAIN, cid)
 
-    # TODO: Note that animation time is set to 1 to make it static after 1s, but we only get last frame
+    # Animation time is set to 1 to make it static after 1s
     qp = urlencode(
         {"ispreview": 0, "isae": 0, "animationtime": 1, "usetagmacros": 0})
     url += qp
@@ -139,15 +142,3 @@ def get_cids(cids=None, pids=None):
             if new_cids:
                 cids += new_cids
     return cids
-
-
-# TODO: Make test for this
-def test():
-    all_tags = __get_active_tags_for_publisher()
-    tag_count = len(all_tags)
-    LOGGER.debug("getActiveTagsForPublisher_test: Found %s tags", tag_count)
-    assert tag_count > 0, "No tags found!"
-
-
-if __name__ == '__main__':
-    test()

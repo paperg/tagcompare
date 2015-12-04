@@ -2,7 +2,6 @@ import json
 import os
 import logging
 
-
 DEFAULT_FILENAME = "settings.json"
 DEFAULT_LOCAL_FILENAME = "settings.local.json"
 DEFAULT_COMPARE_FILENAME = "compare.json"
@@ -32,7 +31,6 @@ class Settings():
         self.__settings = None
         self.__comparefile = comparefile
         self.__compare_set = None
-
 
     @property
     def _settings(self):
@@ -64,9 +62,13 @@ class Settings():
 
     @property
     def webdriver(self):
-        """Gets the remote webdriver settings to use
-            saucelabs: https://wiki.saucelabs.com/display/DOCS/Platform+Configurator#/
-            browserstack: https://www.browserstack.com/list-of-browsers-and-platforms?product=automate
+        """
+        Gets the remote webdriver settings to use
+
+        saucelabs:
+        https://wiki.saucelabs.com/display/DOCS/Platform+Configurator#/
+        browserstack:
+        https://www.browserstack.com/list-of-browsers-and-platforms?product=automate
         """
         webdriver_profiles = self._settings['webdriver']
         for name in webdriver_profiles:
