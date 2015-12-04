@@ -103,13 +103,20 @@ class Settings():
         """Gets a list of unique configs from the comparisons matrix
         :return:
         """
-        tmpset = {}
-        for comp in self.comparisons:
-            complist = self.comparisons[comp]
-            tmpset = set(tmpset).union(set(complist))
+        return get_unique_configs_from_comparisons(self.comparisons)
 
-        unique_configs = list(tmpset)
-        return unique_configs
+
+""" Helper methods """
+
+
+def get_unique_configs_from_comparisons(comparisons):
+    tmpset = {}
+    for comp in comparisons:
+        complist = comparisons[comp]
+        tmpset = set(tmpset).union(set(complist))
+
+    unique_configs = list(tmpset)
+    return unique_configs
 
 
 def _get_abs_path(relpath):

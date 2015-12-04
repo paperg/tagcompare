@@ -7,8 +7,10 @@ import os
 import time
 import glob
 from distutils import dir_util
+import shutil
 
 import logger
+
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, 'output')
@@ -43,8 +45,9 @@ class PathBuilder():
         return self.path == other.path
 
     def __str__(self):
-        # TODO: Handle cases where not all values are initialized
-        return self.path
+        return str("{}-{}-{}-{}".format(
+            self.build, self.config, self.cid, self.size)) \
+            .replace('None', '').rstrip('-')
 
     def __parse(self, dirpath):
         """
@@ -91,18 +94,7 @@ class PathBuilder():
         """Gets the output path for a given config, cid and size
         Returns partial paths if optional parameters aren't provided
         """
-        self.__normalize_params()
-        result = os.path.join(OUTPUT_DIR, self.build)
-        if not self.config:
-            raise ValueError("config is not set!")
-        result = os.path.join(result, self.config)
-        if not self.cid:
-            raise ValueError("cid is not set!")
-        result = os.path.join(result, self.cid)
-        if not self.size:
-            raise ValueError("size is not set!")
-        result = os.path.join(result, self.size)
-        return result
+        return self.__getpath()
 
     def clone(self, build=None, config=None, cid=None, size=None):
         """Clones the object with default values from self.  Can override specifics
@@ -145,6 +137,36 @@ class PathBuilder():
     @property
     def buildpath(self):
         result = os.path.join(OUTPUT_DIR, self.build)
+        return result
+
+    def rmbuild(self):
+        """Cleans up the files in the build path
+        """
+        pb_root = PathBuilder(build=self.build)
+        buildpath = pb_root.__getpath(allow_partial=True)
+        LOGGER.warn("rmbuild for %s", buildpath)
+        if os.path.exists(buildpath):
+            LOGGER.warn("rmbuild for path %s", buildpath)
+            shutil.rmtree(buildpath)
+
+    def __getpath(self, allow_partial=False):
+        self.__normalize_params()
+        result = os.path.join(OUTPUT_DIR, self.build)
+        if not self.config:
+            if not allow_partial:
+                raise ValueError("config is not set!")
+            return result
+        result = os.path.join(result, self.config)
+        if not self.cid:
+            if not allow_partial:
+                raise ValueError("cid is not set!")
+            return result
+        result = os.path.join(result, self.cid)
+        if not self.size:
+            if not allow_partial:
+                raise ValueError("size is not set!")
+            return result
+        result = os.path.join(result, self.size)
         return result
 
     def __normalize_params(self):

@@ -1,5 +1,7 @@
 import time
 
+from selenium.common.exceptions import WebDriverException
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -12,27 +14,50 @@ import logger
 LOGGER = logger.Logger(name=__name__).get()
 
 
-def _read_remote_webdriver_key():
-    data = settings.DEFAULT.webdriver
-    return str.format('{}:{}', data['user'], data['key'])
-
-
-def setup_webdriver(remote=True, capabilities=None):
-    if remote:
-        if not capabilities:
-            raise ValueError("capabilities must be defined for remote runs!")
-
-        remote_webdriver_url = "http://{}@{}".format(
-            _read_remote_webdriver_key(), settings.DEFAULT.webdriver['url'])
-        driver = webdriver.Remote(
-            command_executor=remote_webdriver_url,
-            desired_capabilities=capabilities)
-    else:
-        driver = webdriver.Firefox()
-
+def setup_webdriver(capabilities):
+    driver = __setup_remote_webdriver(capabilities=capabilities)
     driver.implicitly_wait(20)
     driver.get("about:blank")
     return driver
+
+
+def __setup_remote_webdriver(capabilities):
+    if not capabilities:
+        raise ValueError("capabilities must be defined for remote runs!")
+
+    # Update capabilities
+    capabilities['public'] = 'share'
+    user = settings.DEFAULT.webdriver['user']
+    key = settings.DEFAULT.webdriver['key']
+    remote_webdriver_url = "http://{}:{}@{}".format(
+        user, key, settings.DEFAULT.webdriver['url'])
+    driver = webdriver.Remote(
+        command_executor=remote_webdriver_url,
+        desired_capabilities=capabilities)
+    remote_url = "http://www.saucelabs.com/jobs/%s" % driver.session_id
+    LOGGER.debug("Starting remote webdriver with URL: %s\n%s",
+                 remote_url, capabilities)
+    return driver
+
+
+def check_browser_logs(driver):
+    """
+    Checks browser for errors, returns a list of errors
+    This only works for Chrome
+    :param driver:
+    :return:
+    """
+    try:
+        browserlogs = driver.get_log('browser')
+    except WebDriverException:
+        LOGGER.debug("Could not get browser logs for driver %s", driver)
+        return []
+
+    errors = []
+    for entry in browserlogs:
+        if entry['level'] == 'SEVERE':
+            errors.append(entry)
+    return errors
 
 
 def wait_until_element_disappears(driver, locator):
@@ -40,14 +65,19 @@ def wait_until_element_disappears(driver, locator):
         EC.invisibility_of_element_located(locator=locator))
 
 
-def display_tag(driver, tag):
+def display_tag(driver, tag, wait_for_load=True, wait_time=5):
     script = _make_script(tag)
     driver.execute_script(script)
 
-    # Wait until the load spinner goes away
-    load_spinner_locator = (By.CSS_SELECTOR, "img[class*='pl-loader-'")
-    wait_until_element_disappears(driver=driver, locator=load_spinner_locator)
-    time.sleep(5)  # For good measure
+    if wait_for_load:
+        # TODO: implementation is specific to PaperG creatives
+        # Wait until the load spinner goes away
+        load_spinner_locator = (By.CSS_SELECTOR, "img[class*='pl-loader-'")
+        wait_until_element_disappears(driver=driver, locator=load_spinner_locator)
+        time.sleep(wait_time)  # For good measure
+
+    errors = check_browser_logs(driver)
+    return errors
 
 
 def _make_script(tag):

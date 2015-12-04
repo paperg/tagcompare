@@ -125,6 +125,9 @@ def get_tags_for_campaigns(cids):
     result = {}
     for cid in cids:
         tags = __get_tags(cid)
+        if not tags:
+            LOGGER.warn("No tags found for cid %s" % cid)
+            continue
         result[cid] = tags
         total_tags += len(tags)
     return result, total_tags
