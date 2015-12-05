@@ -1,46 +1,48 @@
+import selenium
+
 import placelocal
 import webdriver
 import output
 import settings
 import logger
 
+
 LOGGER = logger.Logger(name=__name__, writefile=True).get()
 
 
-def __start_webdriver_capture(capabilities, name, build):
-    # Extra params to identify the build / job
-    capabilities['build'] = build
-    capabilities['name'] = name
-    LOGGER.debug("Starting browser with capabilities: %s...", capabilities)
-    driver = webdriver.setup_webdriver(remote=True, capabilities=capabilities)
-    return driver
-
-
-def capture_tags_for_all_configs(cids, pathbuilder):
+def __capture_tags_for_configs(cids, pathbuilder,
+                               comparisons=settings.DEFAULT.comparisons,
+                               configs=settings.DEFAULT.configs,
+                               sizes=settings.DEFAULT.tagsizes,
+                               capture_existing=False):
     all_tags, num_tags = placelocal.get_tags_for_campaigns(cids=cids)
     if not all_tags:
         LOGGER.warn("No tags found to capture!")
         return
 
     LOGGER.info(
-        "Capturing {} tags for {} campaigns".format(num_tags, len(cids)))
+        "Capturing %s tags for %s campaigns", num_tags, len(cids))
 
-    # Use remote browsers
-    all_configs = settings.DEFAULT.configs
-    config_names = settings.DEFAULT.configs_in_comparison()
+    errors = []
+    all_configs = configs
+    config_names = settings.get_unique_configs_from_comparisons(comparisons)
     for config in config_names:
         config_data = all_configs[config]
         if not config_data['enabled']:
             LOGGER.debug("Skipping disabled config %s" % config)
             continue
 
-        capabilities = config_data['capabilities']
         pathbuilder.config = config
-        __capture_tags(capabilities, all_tags, pathbuilder,
-                       capture_existing=False)
+        capabilities = config_data['capabilities']
+        capabilities['name'] = str(pathbuilder)
+        capabilities['build'] = pathbuilder.build
+        errors += __capture_tags(capabilities, all_tags, pathbuilder,
+                                 capture_existing=capture_existing, sizes=sizes)
+    LOGGER.error("%s found console errors:\n%s", pathbuilder.build, errors)
+    return errors
 
 
-def _write_html(tag_html, output_path):
+def __write_html(tag_html, output_path):
     if not output_path.endswith('.html'):
         output_path += ".html"
 
@@ -48,61 +50,71 @@ def _write_html(tag_html, output_path):
         f.write(tag_html)
 
 
-def __capture_tag(pathbuilder, tags_per_campaign, tagsize, capabilities,
+def __capture_tag(pathbuilder, tags_per_campaign, capabilities,
                   capture_existing=False):
-    pathbuilder.size = tagsize
-
+    """
+    Captures a tag
+    :param pathbuilder:
+    :param tags_per_campaign:
+    :param tagsize:
+    :param capabilities:
+    :param capture_existing:
+    :return: list of browser errors during capture.
+        False on error, None on skip
+    """
     # Check if we already have the files from default path
     default_pb = pathbuilder.clone(build=output.DEFAULT_BUILD_NAME)
     if default_pb.pathexists() and not capture_existing:
         LOGGER.debug("Skipping existing captures %s", default_pb.path)
-        return False
+        return None
 
-    with __start_webdriver_capture(capabilities,
-                                   build=pathbuilder.build,
-                                   name=pathbuilder.config) as driver:
-        try:
-            tag_html = tags_per_campaign[tagsize]
-            webdriver.display_tag(driver, tag_html)
-        except Exception:
-            LOGGER.exception("Exception while displaying tags!")
-            return None
-
+    driver = webdriver.setup_webdriver(capabilities)
+    try:
+        tag_html = tags_per_campaign[pathbuilder.size]
+        errors = webdriver.display_tag(driver, tag_html)
         # Getting ready to write to files
         pathbuilder.create()
         # TODO: Only works for iframe tags atm
-        try:
-            tag_element = driver.find_element_by_tag_name('iframe')
-            webdriver.screenshot_element(driver, tag_element,
-                                         pathbuilder.tagimage)
-        except Exception:
-            LOGGER.exception(
-                "Exception while getting screenshot for tag: %s",
-                pathbuilder.path)
-            return None
-    _write_html(tag_html=tag_html, output_path=pathbuilder.taghtml)
+        tag_element = driver.find_element_by_tag_name('iframe')
+        webdriver.screenshot_element(driver, tag_element, pathbuilder.tagimage)
+    except selenium.common.exceptions.WebDriverException:
+        LOGGER.exception("Exception while capturing tags!")
+        driver.quit()
+        return False
+
+    driver.quit()
+    __write_html(tag_html=tag_html, output_path=pathbuilder.taghtml)
+    return errors
 
 
-def __capture_tags(capabilities, tags, pathbuilder, capture_existing=False):
+def __capture_tags(capabilities, tags, pathbuilder, sizes=settings.DEFAULT.tagsizes,
+                   capture_existing=False):
     num_existing_skipped = 0
     num_captured = 0
+
+    browser_errors = []
     for cid in tags:
         pathbuilder.cid = cid
         tags_per_campaign = tags[cid]
         LOGGER.debug("tags_per_campaign: %s", str(tags_per_campaign))
-        sizes = settings.DEFAULT.tagsizes
         for tagsize in sizes:
+            pathbuilder.size = tagsize
             r = __capture_tag(pathbuilder=pathbuilder,
-                              tags_per_campaign=tags_per_campaign, tagsize=tagsize,
+                              tags_per_campaign=tags_per_campaign,
                               capabilities=capabilities,
                               capture_existing=capture_existing)
-            if r is False:
+            if r is None:
                 num_existing_skipped += 1
-            elif r is True:
+            elif r is False:
+                continue
+            else:
+                browser_errors += r
                 num_captured += 1
+
     LOGGER.info(
-        "Captured %s tags, skipped %s existing tags for config=%s",
-        num_captured, num_existing_skipped, capabilities)
+        "Captured %s tags, skipped %s existing tags for config=%s.  Found %s errors",
+        num_captured, num_existing_skipped, capabilities, len(browser_errors))
+    return browser_errors
 
 
 def main(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.publishers):
@@ -116,7 +128,7 @@ def main(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.publishers):
     pathbuilder = output.PathBuilder(build=build)
     cids = placelocal.get_cids(cids=cids, pids=pids)
     output.aggregate()
-    capture_tags_for_all_configs(cids=cids, pathbuilder=pathbuilder)
+    __capture_tags_for_configs(cids=cids, pathbuilder=pathbuilder)
     return pathbuilder.build
 
 
