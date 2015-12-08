@@ -8,7 +8,18 @@
   },
   "campaigns": [ ],
   "publishers": [ 627 ],
-  "tagsizes": [ "medium_rectangle", "skyscraper", "halfpage", "leaderboard" ],
+  "tag": {
+    "sizes": {
+      "medium_rectangle": true,
+      "skyscraper": false,
+      "halfpage": true,
+      "leaderboard": true
+    },
+    "types": {
+      "iframe": true,
+      "script": false
+    }
+  },
   "webdriver": {
     "browserstack": {
       "enabled": false,

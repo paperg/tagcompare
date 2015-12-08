@@ -2,12 +2,43 @@ import json
 import os
 import logging
 
+
+MODULE_NAME = "tagcompare"
 DEFAULT_FILENAME = "settings.json"
 DEFAULT_LOCAL_FILENAME = "settings.local.json"
 DEFAULT_COMPARE_FILENAME = "compare.json"
 
-LOG_DIR = "output"
+OUTPUT_DIR = os.path.join("/tmp/", MODULE_NAME)
 LOG_LEVEL = logging.INFO
+
+# Used by tests to access special conditions
+TEST_MODE = False
+
+""" Helper methods """
+
+
+def get_unique_configs_from_comparisons(comparisons):
+    tmpset = {}
+    for comp in comparisons:
+        complist = comparisons[comp]
+        tmpset = set(tmpset).union(set(complist))
+
+    unique_configs = list(tmpset)
+    return unique_configs
+
+
+def _get_enabled_items_in_dict(dictionary):
+    return [item for item in dictionary if dictionary[item]]
+
+
+def _get_abs_path(relpath):
+    dirpath = os.path.abspath(os.path.dirname(__file__))
+    abspath = os.path.join(dirpath, relpath)
+    return abspath
+
+
+def _load_json_file(relpath):
+    return json.load(open(_get_abs_path(relpath), "r"))
 
 
 class Settings():
@@ -16,21 +47,27 @@ class Settings():
     """
 
     def __init__(self, configfile=DEFAULT_LOCAL_FILENAME,
-                 comparefile=DEFAULT_COMPARE_FILENAME):
+                 comparefile=DEFAULT_COMPARE_FILENAME, logdir=OUTPUT_DIR):
         configfile_path = _get_abs_path(configfile)
 
-        logs_dir = _get_abs_path(LOG_DIR)
-        if not os.path.exists(logs_dir):
-            os.makedirs(logs_dir)
+        self.__logdir = _get_abs_path(logdir)
+        if not os.path.exists(self.__logdir):
+            os.makedirs(self.__logdir)
 
         if not os.path.exists(configfile_path):
-            # Use default config file if no override
-            configfile_path = _get_abs_path(DEFAULT_FILENAME)
-
-        self.__configfile = configfile_path
+            self.__configfile = _get_abs_path(DEFAULT_FILENAME)
+            logging.warn(
+                "Invalid configfile_path (%s), using default file at %s",
+                configfile_path, self.__configfile)
+        else:
+            self.__configfile = configfile_path
         self.__settings = None
         self.__comparefile = comparefile
         self.__compare_set = None
+
+    @property
+    def logdir(self):
+        return self.__logdir
 
     @property
     def _settings(self):
@@ -38,9 +75,8 @@ class Settings():
             return self.__settings
 
         assert self.__configfile, "No config file specified!"
-        assert os.path.exists(
-            self.__configfile), "Settings file not found at {}".format(
-            self.__configfile)
+        assert os.path.exists(self.__configfile), \
+            "Settings file not found at {}".format(self.__configfile)
         self.__settings = json.load(open(self.__configfile, "r"))
         return self.__settings
 
@@ -49,8 +85,16 @@ class Settings():
         return self.placelocal['domain']
 
     @property
+    def tag(self):
+        return self.__settings['tag']
+
+    @property
     def tagsizes(self):
-        return self._settings['tagsizes']
+        return _get_enabled_items_in_dict(self.tag['sizes'])
+
+    @property
+    def tagtypes(self):
+        return _get_enabled_items_in_dict(self.tag['types'])
 
     @property
     def campaigns(self):
@@ -104,29 +148,6 @@ class Settings():
         :return:
         """
         return get_unique_configs_from_comparisons(self.comparisons)
-
-
-""" Helper methods """
-
-
-def get_unique_configs_from_comparisons(comparisons):
-    tmpset = {}
-    for comp in comparisons:
-        complist = comparisons[comp]
-        tmpset = set(tmpset).union(set(complist))
-
-    unique_configs = list(tmpset)
-    return unique_configs
-
-
-def _get_abs_path(relpath):
-    dirpath = os.path.abspath(os.path.dirname(__file__))
-    abspath = os.path.join(dirpath, relpath)
-    return abspath
-
-
-def _load_json_file(relpath):
-    return json.load(open(_get_abs_path(relpath), "r"))
 
 
 # TODO: not sure if this is proper...

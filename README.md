@@ -42,4 +42,4 @@ Update the values for webdriver user/key and placelocal secret:
   - `make compare` will compare existing output, given a list of campaigns and configs
 
 ## Running tests
-`make test` will run unit tests
+`make test` or `tox` will run unit tests

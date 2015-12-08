@@ -73,7 +73,8 @@ def display_tag(driver, tag, wait_for_load=True, wait_time=5):
         # TODO: implementation is specific to PaperG creatives
         # Wait until the load spinner goes away
         load_spinner_locator = (By.CSS_SELECTOR, "img[class*='pl-loader-'")
-        wait_until_element_disappears(driver=driver, locator=load_spinner_locator)
+        wait_until_element_disappears(driver=driver,
+                                      locator=load_spinner_locator)
         time.sleep(wait_time)  # For good measure
 
     errors = check_browser_logs(driver)

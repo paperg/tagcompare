@@ -47,7 +47,8 @@ def merge_images(file1, file2):
 def add_info(image, info):
     """
     :param image: The PIL.Image object to add info text to
-    :param info: A set of label:text objects. i.e. { "name": "image1", "diff": "99" }
+    :param info: A set of label:text objects. i.e.
+        { "name": "image1", "diff": "99" }
     :return: the image with the additional info added to it
     """
     (original_width, original_height) = image.size

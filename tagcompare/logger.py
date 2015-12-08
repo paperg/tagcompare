@@ -7,14 +7,13 @@ import settings
 class Logger(object):
     def __init__(self, name, directory=None, writefile=False):
         if directory and not writefile:
-            raise ValueError("directory was specified when writefile is False!")
+            raise ValueError(
+                "directory was specified when writefile is False!")
 
         self.__directory = directory
         if writefile:
             if not directory:
-                self.__directory = os.path.join(
-                    os.path.abspath(os.path.dirname(__file__)),
-                    settings.LOG_DIR)
+                self.__directory = settings.DEFAULT.logdir
             if not os.path.exists(self.__directory):
                 raise IOError(
                     "directory doesn't exist at {}".format(self.__directory))
@@ -44,7 +43,7 @@ class Logger(object):
     def __file_handler(self):
         handler = logging.FileHandler(self.filepath, mode='a')
         formatter = logging.Formatter(
-            '%(asctime)s %(name)s %(message)s')
+            '%(levelname)s:%(asctime)s %(name)s %(message)s')
         handler.setFormatter(formatter)
         handler.setLevel(logging.DEBUG)
         return handler

@@ -1,3 +1,2 @@
-output/*
 settings.local.json
-.cache
+.cache/

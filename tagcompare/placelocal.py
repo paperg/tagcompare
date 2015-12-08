@@ -20,8 +20,9 @@ def _read_placelocal_api_headers():
 
 def get_active_campaigns(pid):
     # TODO: Make this better
-    url = str.format("https://{}/api/v2/publication/{}/campaigns?status=active",
-                     PL_DOMAIN, pid)
+    url = str.format(
+        "https://{}/api/v2/publication/{}/campaigns?status=active",
+        PL_DOMAIN, pid)
     r = requests.get(url, headers=_read_placelocal_api_headers())
     if r.status_code != 200:
         LOGGER.error("getActiveCampaigns %s - API error: %s", url, r)
@@ -42,21 +43,18 @@ def get_active_campaigns(pid):
 
 def __get_tags(cid):
     """
-    Gets a set of tags for a campaign, the key is its size and the value is the tag HTML
+    Gets a set of tags for a campaign,
+    the key is its size and the value is the tag HTML
     :param cid:
     :return:
     """
-    adsizes = ['smartphone_banner', 'skyscraper', 'halfpage',
-               'medium_rectangle', 'smartphone_wide_banner',
-               'leaderboard']
-    # TODO: Support different protocol / tag type
+    # TODO: Support different protocols
     # protocol = ['http_ad_tags', 'https_ad_tags']
-    # type = ['iframe', 'script']
     url = "https://{}/api/v2/campaign/{}/tags?".format(PL_DOMAIN, cid)
 
     # Animation time is set to 1 to make it static after 1s
     qp = urlencode(
-        {"ispreview": 0, "isae": 0, "animationtime": 1, "usetagmacros": 0})
+        {"ispreview": 0, "isae": 0, "animationtime": "", "usetagmacros": 0})
     url += qp
     r = requests.get(url, headers=_read_placelocal_api_headers())
     if r.status_code != 200:
@@ -70,33 +68,11 @@ def __get_tags(cid):
                            tags_data)
             return None
 
-        result = {}
-        for size in adsizes:
-            tag = tags_data[size]['iframe']
-            assert len(tag) > 0, "No tag data found!"
-            LOGGER.debug("size: %s, tag: %s", size, tag)
-            result[size] = tag
-
-        LOGGER.debug("result: %s", result)
-        return result
+        LOGGER.debug("__get_tags result: %s", tags_data)
+        return tags_data
     except KeyError as e:
         LOGGER.exception("Missing %s from response!", e)
         return None
-
-
-def __get_active_tags_for_publisher(pid):
-    campaigns = get_active_campaigns(pid)
-
-    if not campaigns:
-        return None
-
-    all_tags = {}
-    for c in campaigns:
-        cid = c['id']
-        tags = __get_tags(cid)
-        all_tags[cid] = tags
-
-    return all_tags
 
 
 def get_tags_for_campaigns(cids):
@@ -116,8 +92,7 @@ def get_tags_for_campaigns(cids):
     """
 
     LOGGER.info(
-        "get_tags_for_campaigns (%s campaigns): %s...  (this might take a while)",
-        len(cids), cids)
+        "get tags for %s campaigns: %s...", len(cids), cids)
     if not cids:
         return None
 

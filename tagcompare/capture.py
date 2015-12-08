@@ -13,7 +13,8 @@ LOGGER = logger.Logger(name=__name__, writefile=True).get()
 def __capture_tags_for_configs(cids, pathbuilder,
                                comparisons=settings.DEFAULT.comparisons,
                                configs=settings.DEFAULT.configs,
-                               sizes=settings.DEFAULT.tagsizes,
+                               tagsizes=settings.DEFAULT.tagsizes,
+                               tagtypes=settings.DEFAULT.tagtypes,
                                capture_existing=False):
     all_tags, num_tags = placelocal.get_tags_for_campaigns(cids=cids)
     if not all_tags:
@@ -21,7 +22,7 @@ def __capture_tags_for_configs(cids, pathbuilder,
         return
 
     LOGGER.info(
-        "Capturing %s tags for %s campaigns", num_tags, len(cids))
+        "Found %s tags for %s campaigns", num_tags, len(cids))
 
     errors = []
     all_configs = configs
@@ -37,7 +38,8 @@ def __capture_tags_for_configs(cids, pathbuilder,
         capabilities['name'] = str(pathbuilder)
         capabilities['build'] = pathbuilder.build
         errors += __capture_tags(capabilities, all_tags, pathbuilder,
-                                 capture_existing=capture_existing, sizes=sizes)
+                                 capture_existing=capture_existing,
+                                 tagsizes=tagsizes, tagtypes=tagtypes)
     LOGGER.error("%s found console errors:\n%s", pathbuilder.build, errors)
     return errors
 
@@ -70,12 +72,11 @@ def __capture_tag(pathbuilder, tags_per_campaign, capabilities,
 
     driver = webdriver.setup_webdriver(capabilities)
     try:
-        tag_html = tags_per_campaign[pathbuilder.size]
+        tag_html = tags_per_campaign[pathbuilder.size][pathbuilder.type]
         errors = webdriver.display_tag(driver, tag_html)
         # Getting ready to write to files
         pathbuilder.create()
-        # TODO: Only works for iframe tags atm
-        tag_element = driver.find_element_by_tag_name('iframe')
+        tag_element = driver.find_element_by_tag_name(pathbuilder.type)
         webdriver.screenshot_element(driver, tag_element, pathbuilder.tagimage)
     except selenium.common.exceptions.WebDriverException:
         LOGGER.exception("Exception while capturing tags!")
@@ -87,29 +88,35 @@ def __capture_tag(pathbuilder, tags_per_campaign, capabilities,
     return errors
 
 
-def __capture_tags(capabilities, tags, pathbuilder, sizes=settings.DEFAULT.tagsizes,
+def __capture_tags(capabilities, tags, pathbuilder,
+                   tagsizes=settings.DEFAULT.tagsizes, tagtypes=settings.DEFAULT.tagtypes,
                    capture_existing=False):
     num_existing_skipped = 0
     num_captured = 0
 
+    LOGGER.info("Capturing %s tags for config %s", len(tags), capabilities)
     browser_errors = []
     for cid in tags:
         pathbuilder.cid = cid
         tags_per_campaign = tags[cid]
         LOGGER.debug("tags_per_campaign: %s", str(tags_per_campaign))
-        for tagsize in sizes:
+        # TODO: Refactor better with __capture_tag
+        # It's weird that we pass in a pathbuilder object and do two nested loops here
+        for tagsize in tagsizes:
             pathbuilder.size = tagsize
-            r = __capture_tag(pathbuilder=pathbuilder,
-                              tags_per_campaign=tags_per_campaign,
-                              capabilities=capabilities,
-                              capture_existing=capture_existing)
-            if r is None:
-                num_existing_skipped += 1
-            elif r is False:
-                continue
-            else:
-                browser_errors += r
-                num_captured += 1
+            for tagtype in tagtypes:
+                pathbuilder.type = tagtype
+                r = __capture_tag(pathbuilder=pathbuilder,
+                                  tags_per_campaign=tags_per_campaign,
+                                  capabilities=capabilities,
+                                  capture_existing=capture_existing)
+                if r is None:
+                    num_existing_skipped += 1
+                elif r is False:
+                    continue
+                else:
+                    browser_errors += r
+                    num_captured += 1
 
     LOGGER.info(
         "Captured %s tags, skipped %s existing tags for config=%s.  Found %s errors",

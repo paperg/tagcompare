@@ -1,0 +1,37 @@
+{
+  "placelocal": {
+    "domain": "www.placelocal.com",
+    "secret": {
+      "pl-secret": "SECRET",
+      "pl-service-identifier": "ID"
+    }
+  },
+  "campaigns": [ ],
+  "publishers": [ 627 ],
+  "tag": {
+    "sizes": {
+      "medium_rectangle": true,
+      "skyscraper": false,
+      "halfpage": true,
+      "leaderboard": true
+    },
+    "types": {
+      "iframe": true,
+      "script": false
+    }
+  },
+  "webdriver": {
+    "browserstack": {
+      "enabled": false,
+      "user": "USER",
+      "key": "KEY",
+      "url": "hub.browserstack.com:80/wd/hub"
+    },
+    "saucelabs": {
+      "enabled": false,
+      "user": "USER",
+      "key": "KEY",
+      "url": "ondemand.saucelabs.com:80/wd/hub"
+    }
+  }
+}
