@@ -17,7 +17,6 @@ LOGGER = logger.Logger(name=__name__).get()
 def setup_webdriver(capabilities):
     driver = __setup_remote_webdriver(capabilities=capabilities)
     driver.implicitly_wait(20)
-    driver.get("about:blank")
     return driver
 
 
@@ -35,7 +34,7 @@ def __setup_remote_webdriver(capabilities):
         command_executor=remote_webdriver_url,
         desired_capabilities=capabilities)
     remote_url = "http://www.saucelabs.com/jobs/%s" % driver.session_id
-    LOGGER.debug("Starting remote webdriver with URL: %s\n%s",
+    LOGGER.debug("Starting remote webdriver job: %s\n%s",
                  remote_url, capabilities)
     return driver
 
@@ -49,8 +48,9 @@ def check_browser_logs(driver):
     """
     try:
         browserlogs = driver.get_log('browser')
-    except WebDriverException:
-        LOGGER.debug("Could not get browser logs for driver %s", driver)
+    except (ValueError, WebDriverException) as e:
+        LOGGER.debug("Could not get browser logs for driver %s due to exception: %s",
+                     driver, e)
         return []
 
     errors = []
@@ -66,6 +66,7 @@ def wait_until_element_disappears(driver, locator):
 
 
 def display_tag(driver, tag, wait_for_load=True, wait_time=5):
+    driver.get("about:blank")  # Clear the page first
     script = _make_script(tag)
     driver.execute_script(script)
 

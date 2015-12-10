@@ -3,6 +3,7 @@ import pytest
 from tagcompare import capture
 from tagcompare import settings
 from tagcompare import output
+from tagcompare import webdriver
 
 SETTINGS = settings.Settings(configfile='test/test_settings.json',
                              comparefile='test/test_compare.json')
@@ -48,7 +49,9 @@ def __capture_tag():
         "platform": "Windows 7",
         "browserName": "chrome"
     }
+    driver = webdriver.setup_webdriver(capabilities)
     result = capture.__capture_tag(pathbuilder=pb, tags_per_campaign=tags,
-                                   capabilities=capabilities,
+                                   driver=driver,
                                    capture_existing=True)
+    driver.quit()
     assert result, "Error capturing tags!"
