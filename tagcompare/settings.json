@@ -7,6 +7,7 @@
     }
   },
   "campaigns": [ ],
+  "capture_existing": false,
   "publishers": [ 627, 636, 635, 637, 638 ],
   "tag": {
     "sizes": {
@@ -17,7 +18,8 @@
     },
     "types": {
       "iframe": true,
-      "script": false
+      "script": false,
+      "preview": false
     }
   },
   "saucelabs": {

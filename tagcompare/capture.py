@@ -1,4 +1,5 @@
 from multiprocessing.pool import ThreadPool
+from itertools import product
 import os
 
 import selenium
@@ -18,7 +19,7 @@ def __capture_tags_for_configs(cids, pathbuilder,
                                configs=settings.DEFAULT.configs,
                                tagsizes=settings.DEFAULT.tagsizes,
                                tagtypes=settings.DEFAULT.tagtypes,
-                               capture_existing=False):
+                               capture_existing=settings.DEFAULT.capture_existing):
     all_tags = placelocal.get_tags_for_campaigns(cids=cids)
     if not all_tags:
         LOGGER.warn("No tags found to capture!")
@@ -65,6 +66,33 @@ def __write_html(tag_html, output_path):
     LOGGER.debug("Writing html tag to file at %s", output_path)
     with open(output_path, 'w') as f:
         f.write(tag_html)
+
+
+def __capture_preview(pathbuilder, driver,  capture_existing=False):
+    """
+    Captures a preview
+    :param pathbuilder:
+    :param driver:
+    :param capture_existing:
+        False on error, None on skip
+    """
+    # Check if we already have the files from default path
+    default_pb = pathbuilder.clone(build=output.DEFAULT_BUILD_NAME)
+    if default_pb.pathexists() and not capture_existing:
+        LOGGER.debug("Skipping existing captures %s", default_pb.path)
+        return None
+
+    try:
+        webdriver.display_preview(driver, pathbuilder)
+        # Getting ready to write to files
+        pathbuilder.create()
+        tag_element = driver.find_element_by_css_selector("div[style]")
+        webdriver.screenshot_element(driver, tag_element, pathbuilder.tagimage)
+    except selenium.common.exceptions.WebDriverException:
+        LOGGER.exception("Exception while capturing tags!")
+        return False
+
+    return []
 
 
 def __capture_tag(pathbuilder, tags_per_campaign, driver,
@@ -115,22 +143,25 @@ def __capture_tags(capabilities, tags, pathbuilder,
             tags_per_campaign = tags[cid]
             LOGGER.debug("tags_per_campaign: %s", str(tags_per_campaign))
             # TODO: Refactor better with __capture_tag
-            # It's weird that we pass in a pathbuilder object and do two nested loops here
-            for tagsize in tagsizes:
+            for tagsize, tagtype in product(tagsizes, tagtypes):
                 pathbuilder.tagsize = tagsize
-                for tagtype in tagtypes:
-                    pathbuilder.tagtype = tagtype
+                pathbuilder.tagtype = tagtype
+                if "preview" in tagtype:
+                    r = __capture_preview(pathbuilder,
+                                          driver,
+                                          capture_existing)
+                else:
                     r = __capture_tag(pathbuilder=pathbuilder,
                                       tags_per_campaign=tags_per_campaign,
                                       driver=driver,
                                       capture_existing=capture_existing)
-                    if r is None:
-                        num_existing_skipped += 1
-                    elif r is False:
-                        continue
-                    else:
-                        browser_errors += r
-                        num_captured += 1
+                if r is None:
+                    num_existing_skipped += 1
+                elif r is False:
+                    continue
+                else:
+                    browser_errors += r
+                    num_captured += 1
     except KeyboardInterrupt:
         driver.quit()
         driver = None

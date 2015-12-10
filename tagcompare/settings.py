@@ -135,6 +135,10 @@ class Settings():
         return self._settings['publishers']
 
     @property
+    def capture_existing(self):
+        return self._settings['capture_existing']
+
+    @property
     def _saucelabs(self):
         return self._settings['saucelabs']
 

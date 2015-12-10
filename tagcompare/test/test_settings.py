@@ -65,7 +65,7 @@ def test_tagtypes():
     assert tag_settings, "Could not get tag settings!"
     all_types = tag_settings['types']
     assert all_types, "Could not get types from tag settings!"
-    assert len(all_types) == 2, "There should be exactly 4 supported types!"
+    assert len(all_types) == 3, "There should be exactly 4 supported types!"
     enabled_types = SETTINGS.tagtypes
     assert len(enabled_types) == 1, "There should be exactly 1 enabled types!"
 
