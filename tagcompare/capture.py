@@ -1,3 +1,5 @@
+from multiprocessing.pool import ThreadPool
+
 import selenium
 
 import placelocal
@@ -6,7 +8,7 @@ import output
 import settings
 import logger
 
-
+MAX_THREAD_COUNT = 10
 LOGGER = logger.Logger(name=__name__, writefile=True).get()
 
 
@@ -23,10 +25,12 @@ def __capture_tags_for_configs(cids, pathbuilder,
 
     LOGGER.info(
         "Found %s tags for %s campaigns", num_tags, len(cids))
-
     errors = []
     all_configs = configs
     config_names = settings.get_unique_configs_from_comparisons(comparisons)
+    pool = ThreadPool(processes=MAX_THREAD_COUNT)  # TODO: Make const
+    results = {}
+
     for config in config_names:
         config_data = all_configs[config]
         if not config_data['enabled']:
@@ -38,9 +42,14 @@ def __capture_tags_for_configs(cids, pathbuilder,
         capabilities['name'] = config
         capabilities['build'] = "tagcompare_" + pathbuilder.build
         capabilities['maxDuration'] = 3 * 60 * 60  # 3h max duration
-        errors += __capture_tags(capabilities, all_tags, pathbuilder,
-                                 capture_existing=capture_existing,
-                                 tagsizes=tagsizes, tagtypes=tagtypes)
+
+        cpb = pathbuilder.clone()
+        results[config] = pool.apply_async(func=__capture_tags,
+                                           args=(capabilities, all_tags, cpb,
+                                                 tagsizes, tagtypes,
+                                                 capture_existing))
+    for key in results:
+        errors += results[key].get()
     LOGGER.error("%s found console errors:\n%s", pathbuilder.build, errors)
     return errors
 
@@ -49,6 +58,7 @@ def __write_html(tag_html, output_path):
     if not output_path.endswith('.html'):
         output_path += ".html"
 
+    LOGGER.debug("Writing html tag to file at %s", output_path)
     with open(output_path, 'w') as f:
         f.write(tag_html)
 
@@ -118,9 +128,12 @@ def __capture_tags(capabilities, tags, pathbuilder,
                     else:
                         browser_errors += r
                         num_captured += 1
-    finally:
-        # Always close browser at the end
+    except KeyboardInterrupt:
         driver.quit()
+        driver = None
+    finally:
+        if driver:
+            driver.quit()
     LOGGER.info(
         "Captured %s tags, skipped %s existing tags for config=%s.  Found %s errors",
         num_captured, num_existing_skipped, capabilities, len(browser_errors))

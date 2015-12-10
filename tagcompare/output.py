@@ -262,8 +262,8 @@ def aggregate(outputdir=OUTPUT_DIR):
             continue
 
         buildpath = os.path.join(outputdir, buildpath)
-        LOGGER.warn("Copying from %s to %s", buildpath,
-                    aggregate_path)
+        LOGGER.debug("Copying from %s to %s", buildpath,
+                     aggregate_path)
 
         dir_util.copy_tree(buildpath, aggregate_path, update=1)
     return aggregate_path
