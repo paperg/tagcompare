@@ -7,7 +7,7 @@
     }
   },
   "campaigns": [ ],
-  "publishers": [ 627 ],
+  "publishers": [ 627, 636, 635, 637, 638 ],
   "tag": {
     "sizes": {
       "medium_rectangle": true,

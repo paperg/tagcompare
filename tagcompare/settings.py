@@ -14,6 +14,13 @@ LOG_LEVEL = logging.INFO
 # Used by tests to access special conditions
 TEST_MODE = False
 
+"""
+The animation time until the tag stops on the final frame
+Setting animation time of 1 makes the ad transition to final frame after 1s
+Any lower than this will cause incorrect animation transitions on the final frame
+"""
+TAG_ANIMATION_TIME = 1
+
 """ Helper methods """
 
 

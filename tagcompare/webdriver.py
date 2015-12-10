@@ -65,7 +65,7 @@ def wait_until_element_disappears(driver, locator):
         EC.invisibility_of_element_located(locator=locator))
 
 
-def display_tag(driver, tag, wait_for_load=True, wait_time=5):
+def display_tag(driver, tag, wait_for_load=True, wait_time=3):
     driver.get("about:blank")  # Clear the page first
     script = _make_script(tag)
     driver.execute_script(script)
@@ -76,7 +76,10 @@ def display_tag(driver, tag, wait_for_load=True, wait_time=5):
         load_spinner_locator = (By.CSS_SELECTOR, "img[class*='pl-loader-'")
         wait_until_element_disappears(driver=driver,
                                       locator=load_spinner_locator)
-        time.sleep(wait_time)  # For good measure
+
+        # Account for animation time and add some buffer for good measure
+        time.sleep(settings.TAG_ANIMATION_TIME)
+        time.sleep(wait_time)
 
     errors = check_browser_logs(driver)
     return errors

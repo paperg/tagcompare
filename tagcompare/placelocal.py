@@ -53,7 +53,8 @@ def __get_tags(cid):
 
     # Animation time is set to 1 to make it static after 1s
     qp = urlencode(
-        {"ispreview": 0, "isae": 0, "animationtime": "", "usetagmacros": 0})
+        {"ispreview": 0, "isae": 0, "animationtime": settings.TAG_ANIMATION_TIME,
+         "usetagmacros": 0})
     url += qp
     r = requests.get(url, headers=_read_placelocal_api_headers())
     if r.status_code != 200:
