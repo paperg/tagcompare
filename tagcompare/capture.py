@@ -8,7 +8,6 @@ import output
 import settings
 import logger
 
-MAX_THREAD_COUNT = 10
 LOGGER = logger.Logger(name=__name__, writefile=True).get()
 
 
@@ -28,28 +27,28 @@ def __capture_tags_for_configs(cids, pathbuilder,
     errors = []
     all_configs = configs
     config_names = settings.get_unique_configs_from_comparisons(comparisons)
-    pool = ThreadPool(processes=MAX_THREAD_COUNT)  # TODO: Make const
+    pool = ThreadPool(processes=10)
     results = {}
 
-    for config in config_names:
-        config_data = all_configs[config]
+    for config_name in config_names:
+        config_data = all_configs[config_name]
         if not config_data['enabled']:
-            LOGGER.debug("Skipping disabled config %s" % config)
+            LOGGER.debug("Skipping disabled config %s" % config_name)
             continue
 
-        pathbuilder.config = config
+        pathbuilder.config = config_name
         capabilities = config_data['capabilities']
-        capabilities['name'] = config
+        capabilities['name'] = config_name
         capabilities['build'] = "tagcompare_" + pathbuilder.build
         capabilities['maxDuration'] = 3 * 60 * 60  # 3h max duration
 
         cpb = pathbuilder.clone()
-        results[config] = pool.apply_async(func=__capture_tags,
-                                           args=(capabilities, all_tags, cpb,
-                                                 tagsizes, tagtypes,
-                                                 capture_existing))
-    for key in results:
-        errors += results[key].get()
+        results[config_name] = pool.apply_async(func=__capture_tags,
+                                                args=(capabilities, all_tags, cpb,
+                                                      tagsizes, tagtypes,
+                                                      capture_existing))
+    for config_name in results:
+        errors += results[config_name].get()
     LOGGER.error("%s found console errors:\n%s", pathbuilder.build, errors)
     return errors
 

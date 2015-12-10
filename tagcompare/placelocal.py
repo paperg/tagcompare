@@ -1,3 +1,4 @@
+from multiprocessing.pool import ThreadPool
 import json
 from urllib import urlencode
 import time
@@ -18,8 +19,7 @@ def _read_placelocal_api_headers():
     return headers
 
 
-def get_active_campaigns(pid):
-    # TODO: Make this better
+def __get_active_campaigns(pid):
     url = str.format(
         "https://{}/api/v2/publication/{}/campaigns?status=active",
         PL_DOMAIN, pid)
@@ -31,7 +31,6 @@ def get_active_campaigns(pid):
     data = json.loads(r.text)
     campaigns = data['data']['campaigns']
 
-    # TODO: There's probably a better way to do this...
     result = []
     for c in campaigns:
         cid = c['id']
@@ -61,51 +60,44 @@ def __get_tags(cid):
         LOGGER.error("getTags: error: %s", r)
         return None
 
-    try:
-        tags_data = json.loads(r.text)['data']['http_ad_tags']
-        if not tags_data:
-            LOGGER.warning("No tags found for cid %s, tags data: %s", cid,
-                           tags_data)
-            return None
-
-        LOGGER.debug("__get_tags result: %s", tags_data)
-        return tags_data
-    except KeyError as e:
-        LOGGER.exception("Missing %s from response!", e)
+    tags_data = json.loads(r.text)['data']['http_ad_tags']
+    if not tags_data:
+        LOGGER.warning("No tags found for cid %s, tags data: %s", cid,
+                       tags_data)
         return None
+
+    LOGGER.debug("__get_tags result: %s\n\n\n", tags_data)
+    return tags_data
 
 
 def get_tags_for_campaigns(cids):
     """
-    Gets a set of tags for multiple campaigns in this form:
+    Gets a set of tags for multiple campaigns:
 
-    tags = {
-        "cid1": {
-            "size1": "<tag>html</tag>",
-            "size2": "<tag>html</tag>"...
-        },
-        "cid2": {...
-        }...
-    }
-    :param cids:
+    :param cids: a list of campaign ids
     :return:
     """
-
+    if not cids:
+        raise ValueError("cids not defined!")
     LOGGER.info(
         "get tags for %s campaigns: %s...", len(cids), cids)
-    if not cids:
-        return None
+
+    tp = ThreadPool(processes=10)
+    results = []
+    for cid in cids:
+        results.append(tp.apply_async(func=__get_tags, args=(cid,)))
 
     total_tags = 0
-    result = {}
-    for cid in cids:
-        tags = __get_tags(cid)
+    all_tags = {}
+    for r in results:
+        tags = r.get()
         if not tags:
             LOGGER.warn("No tags found for cid %s" % cid)
             continue
-        result[cid] = tags
-        total_tags += len(tags)
-    return result, total_tags
+        all_tags[cid] = tags
+        total_tags += len(all_tags)
+
+    return all_tags, total_tags
 
 
 def get_cids(cids=None, pids=None):
@@ -116,7 +108,7 @@ def get_cids(cids=None, pids=None):
 
         cids = []
         for pid in pids:
-            new_cids = get_active_campaigns(pid)
+            new_cids = __get_active_campaigns(pid)
             if new_cids:
                 cids += new_cids
     return cids
