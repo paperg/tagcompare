@@ -3,8 +3,7 @@ import os
 import pytest
 
 from tagcompare import webdriver
-
-TEST_DIR = os.path.abspath(os.path.dirname(__file__))
+import helper
 
 
 def test_setup_remote_webdriver_exceptions():
@@ -27,7 +26,7 @@ def test_webdriver_screenshot_tag():
 
 def __test_screenshot_tag(testdriver):
     tag_element = testdriver.find_element_by_tag_name('iframe')
-    screenshot_path = os.path.join(TEST_DIR, 'test_screenshot')
+    screenshot_path = os.path.join(helper.TEST_ASSETS_DIR, 'test_screenshot')
     img = webdriver.screenshot_element(driver=testdriver, element=tag_element,
                                        output_path=screenshot_path)
     assert img, "Could not get image from screenshot!"
@@ -44,7 +43,7 @@ def __test_screenshot_tag(testdriver):
 
 def __test_webdriver_display_tag(testdriver):
     # The specific tag I'm using will have one browser error in it
-    tag_path = os.path.join(TEST_DIR, "test_tag.html")
+    tag_path = os.path.join(helper.TEST_ASSETS_DIR, "test_tag.html")
     with open(tag_path, "r") as tag_file:
         test_pl_tag = tag_file.read()
         errors = webdriver.display_tag(driver=testdriver, tag=test_pl_tag)

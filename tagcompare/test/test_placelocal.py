@@ -1,14 +1,36 @@
+import os
+import json
+
 import pytest
 
 from tagcompare import placelocal
+import helper
+
+
+def __read_json_file(jsonfile):
+    with open(jsonfile) as f:
+        return json.load(f)
+
+
+def __validate_tags(tags):
+    expected_tags_file = os.path.join(helper.TEST_ASSETS_DIR, "test_tags.json")
+    actual_tags_file = 'tmp_tags.json'
+    with open(actual_tags_file, 'w') as actual_tags:
+        json.dump(tags, actual_tags)
+
+    expected_tags = __read_json_file(expected_tags_file)
+    actual_tags = __read_json_file(actual_tags_file)
+    assert expected_tags == actual_tags, "tags don't match expected!"
+    os.remove(actual_tags_file)
 
 
 @pytest.mark.integration
 def test_get_tags_for_campaigns():
     cids = [516675, 509147]
-    tags, count = placelocal.get_tags_for_campaigns(cids=cids)
+    tags = placelocal.get_tags_for_campaigns(cids=cids)
     assert tags, "Did not get tags for cid {}!".format(cids)
-    assert count == 24, "Should have gotten exactly 24 tags!"
+    __validate_tags(tags)
+
     for cid in tags:
         tags_per_campaign = tags[cid]
         assert len(tags_per_campaign) == 6, "Should have 6 sizes per campaign!"

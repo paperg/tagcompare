@@ -7,8 +7,10 @@ from tagcompare import settings
 
 
 settings.TEST_MODE = True
-SETTINGS = settings.Settings(configfile='test/test_settings.json',
-                             comparefile='test/test_compare.json')
+TEST_COMPARE_FILE = 'test/assets/test_compare.json'
+TEST_SETTINGS_FILE = 'test/assets/test_settings.json'
+SETTINGS = settings.Settings(configfile=TEST_SETTINGS_FILE,
+                             comparefile=TEST_COMPARE_FILE)
 
 
 def test_config():
@@ -29,13 +31,13 @@ def __test_logdir(logdir):
 
 def test_logdir():
     tmpdir = tempfile.gettempdir()
-    s = settings.Settings(configfile='test/test_settings.json',
-                          comparefile='test/test_compare.json',
+    s = settings.Settings(configfile=TEST_SETTINGS_FILE,
+                          comparefile=TEST_COMPARE_FILE,
                           logdir=tmpdir)
     __test_logdir(s.logdir)
     newdir = "new_logdir"
-    s = settings.Settings(configfile='test/test_settings.json',
-                          comparefile='test/test_compare.json',
+    s = settings.Settings(configfile=TEST_SETTINGS_FILE,
+                          comparefile=TEST_COMPARE_FILE,
                           logdir=newdir)
     __test_logdir(s.logdir)
     os.rmdir(s.logdir)
@@ -73,7 +75,7 @@ def test_tagtypes():
 def test_webdriver():
     webdriver_settings = SETTINGS.webdriver
     assert webdriver_settings, "Could not get webdriver settings!"
-    invalid = settings.Settings(configfile='test/test_settings_invalid.json')
+    invalid = settings.Settings(configfile='test/assets/test_settings_invalid.json')
     with pytest.raises(ValueError):
         print "This should raise ValueError: %s" % invalid.webdriver
 

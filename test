@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+TEST_FILE="$1"
+PYTHONPATH=. py.test -s "$TEST_FILE"

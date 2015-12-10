@@ -84,21 +84,19 @@ def get_tags_for_campaigns(cids):
         "get tags for %s campaigns: %s...", len(cids), cids)
 
     tp = ThreadPool(processes=10)
-    results = []
+    results = {}
     for cid in cids:
-        results.append(tp.apply_async(func=__get_tags, args=(cid,)))
-
-    total_tags = 0
+        results[cid] = tp.apply_async(func=__get_tags, args=(cid,))
     all_tags = {}
-    for r in results:
-        tags = r.get()
+    for cid in results:
+        tags = results[cid].get()
         if not tags:
             LOGGER.warn("No tags found for cid %s" % cid)
             continue
         all_tags[cid] = tags
-        total_tags += len(all_tags)
-
-    return all_tags, total_tags
+    LOGGER.debug("get_tags_for_campaigns for cids=%s returned:\n%s",
+                 cids, all_tags)
+    return all_tags
 
 
 def get_cids(cids=None, pids=None):

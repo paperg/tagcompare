@@ -35,6 +35,7 @@ setup(
         'selenium',
         'requests',
         'pillow',
+        'enum'
     ],
     package_data={
         '': ['*.json'],

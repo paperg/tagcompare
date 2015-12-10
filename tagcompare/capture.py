@@ -8,7 +8,7 @@ import output
 import settings
 import logger
 
-LOGGER = logger.Logger(name=__name__, writefile=True).get()
+LOGGER = logger.Logger(name="capture", writefile=True).get()
 
 
 def __capture_tags_for_configs(cids, pathbuilder,
@@ -17,13 +17,12 @@ def __capture_tags_for_configs(cids, pathbuilder,
                                tagsizes=settings.DEFAULT.tagsizes,
                                tagtypes=settings.DEFAULT.tagtypes,
                                capture_existing=False):
-    all_tags, num_tags = placelocal.get_tags_for_campaigns(cids=cids)
+    all_tags = placelocal.get_tags_for_campaigns(cids=cids)
     if not all_tags:
         LOGGER.warn("No tags found to capture!")
         return
 
-    LOGGER.info(
-        "Found %s tags for %s campaigns", num_tags, len(cids))
+    LOGGER.info("Capturing tags for %s campaigns", len(cids))
     errors = []
     all_configs = configs
     config_names = settings.get_unique_configs_from_comparisons(comparisons)
@@ -49,7 +48,8 @@ def __capture_tags_for_configs(cids, pathbuilder,
                                                       capture_existing))
     for config_name in results:
         errors += results[config_name].get()
-    LOGGER.error("%s found console errors:\n%s", pathbuilder.build, errors)
+    if errors:
+        LOGGER.error("%s found console errors:\n%s", pathbuilder.build, errors)
     return errors
 
 
@@ -77,7 +77,7 @@ def __capture_tag(pathbuilder, tags_per_campaign, driver,
     # Check if we already have the files from default path
     default_pb = pathbuilder.clone(build=output.DEFAULT_BUILD_NAME)
     if default_pb.pathexists() and not capture_existing:
-        LOGGER.debug("Skipping existing captures %s", default_pb.path)
+        LOGGER.warn("Skipping existing captures %s", default_pb.path)
         return None
 
     try:
@@ -100,8 +100,6 @@ def __capture_tags(capabilities, tags, pathbuilder,
                    capture_existing=False):
     num_existing_skipped = 0
     num_captured = 0
-
-    LOGGER.info("Capturing %s tags for config %s", len(tags), capabilities)
     browser_errors = []
     driver = webdriver.setup_webdriver(capabilities)
 
@@ -139,19 +137,20 @@ def __capture_tags(capabilities, tags, pathbuilder,
     return browser_errors
 
 
-def main(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.publishers):
+def main(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.publishers, build=None):
     """
     Runs capture, returns the job name for the capture job
     :param cids:
     :param pids:
     :return:
     """
-    build = output.generate_build_string()
+    if not build:
+        build = output.generate_build_string()
     pathbuilder = output.create(build=build)
     cids = placelocal.get_cids(cids=cids, pids=pids)
     output.aggregate()
     __capture_tags_for_configs(cids=cids, pathbuilder=pathbuilder)
-    return pathbuilder.build
+    return build
 
 
 if __name__ == '__main__':

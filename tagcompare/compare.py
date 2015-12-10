@@ -153,6 +153,7 @@ def main(jobname=None):
     pb = output.create(build=jobname)
     do_all_comparisons(cids=settings.DEFAULT.campaigns,
                        pids=settings.DEFAULT.publishers, pathbuilder=pb)
+    return pb
 
 
 if __name__ == '__main__':

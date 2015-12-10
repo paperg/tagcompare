@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from tagcompare import capture
@@ -5,8 +7,9 @@ from tagcompare import settings
 from tagcompare import output
 from tagcompare import webdriver
 
-SETTINGS = settings.Settings(configfile='test/test_settings.json',
-                             comparefile='test/test_compare.json')
+
+SETTINGS = settings.Settings(configfile='test/assets/test_settings.json',
+                             comparefile='test/assets/test_compare.json')
 
 
 @pytest.mark.integration
@@ -33,17 +36,17 @@ def test_capture_configs():
     pb.rmbuild()
 
 
-def __capture_tag():
+@pytest.mark.integration
+def test_capture_tag():
     """
-    def __capture_tag(pathbuilder, tags_per_campaign, capabilities,
-                  capture_existing=False):
+    Verify that we can capture iframe and script tags
     :return:
     """
     pb = output.create(build="capture_tag_test", config="testconfig", cid="testcid",
                        tagsize="skyscraper", tagtype="iframe")
     tags = {"skyscraper": {
-        "iframe": "<b>iframe tag for skyscraper</b>",
-        "script": "<b>script tag for skyscraper</b>",
+        "iframe": "<iframe>iframe tag for skyscraper</iframe>",
+        "script": "<script>script tag for skyscraper</script>",
     }}
     capabilities = {
         "platform": "Windows 7",
@@ -54,4 +57,9 @@ def __capture_tag():
                                    driver=driver,
                                    capture_existing=True)
     driver.quit()
-    assert result, "Error capturing tags!"
+    assert result is not None, "Could not capture tags!"
+    assert result is not False, "Tag capture skipped!"
+    assert len(result) == 0, "Errors while capturing tags!"
+    assert os.path.exists(pb.tagimage), "tagimage was not captured!"
+    assert os.path.exists(pb.taghtml), "taghtml was not captured!"
+    pb.rmbuild()

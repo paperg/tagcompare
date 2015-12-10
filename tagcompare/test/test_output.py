@@ -11,8 +11,8 @@ TESTPATH = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 
 def __assert_correct_path(pathbuilder):
     expectedstr = "{}/{}/{}/{}/{}/{}".format(
-        pathbuilder.basepath, pathbuilder.build, pathbuilder.config,
-        pathbuilder.cid, pathbuilder.tagsize, pathbuilder.tagtype)
+        pathbuilder.basepath, pathbuilder.build,
+        pathbuilder.cid, pathbuilder.tagsize, pathbuilder.tagtype, pathbuilder.config)
     print "expected: {}".format(expectedstr)
     print "actual: {}".format(pathbuilder.path)
     assert str(pathbuilder.path).endswith(expectedstr)
@@ -20,7 +20,7 @@ def __assert_correct_path(pathbuilder):
 
 def __rmbuild_and_validate(pb):
     result = pb.rmbuild()
-    assert not os.path.exists(pb.path), "Path should not exist after removal!"
+    assert not pb.pathexists(), "Path should not exist after removal!"
     return result
 
 
@@ -31,6 +31,21 @@ def __get_pathbuilder(build="testbuild", config="testconfig", cid=131313,
                          build=build, tagtype=tagtype)
 
 
+def __validate_cidpath(pathbuilder):
+    cidpath = pathbuilder.cidpath
+    # TODO: This is very implementation detailish...
+    assert cidpath == os.path.join(pathbuilder.buildpath, str(pathbuilder.cid)), \
+        "Incorrect cidpath!"
+    assert os.path.exists(cidpath), "Could not get cidpath!"
+
+
+def __validate_buildpath(pathbuilder):
+    buildpath = pathbuilder.buildpath
+    assert buildpath == os.path.join(pathbuilder.basepath, pathbuilder.build), \
+        "Incorrect buildpath!"
+    assert os.path.exists(buildpath), "Could not get buildpath!"
+
+
 def test_pathbuilder_create():
     pathbuilder = __get_pathbuilder()
     result = pathbuilder.create()
@@ -39,6 +54,8 @@ def test_pathbuilder_create():
 
     # Make sure the structure is proper
     __assert_correct_path(pathbuilder)
+    __validate_buildpath(pathbuilder)
+    __validate_cidpath(pathbuilder)
     __rmbuild_and_validate(pathbuilder)
 
 
@@ -70,8 +87,8 @@ def test_aggregate_custom():
     asset_path = os.path.join(TESTPATH, "assets")
     custom_dir = output.aggregate(outputdir=asset_path)
     assert os.path.exists(custom_dir), "Aggregate dir should exist!"
-    children = os.listdir(custom_dir)
-    assert len(children) == 12, "There should be stuff aggregated!"
+    children = os.listdir(asset_path)
+    assert output.DEFAULT_BUILD_NAME in children, "There should be stuff aggregated!"
     shutil.rmtree(custom_dir)
 
 
@@ -128,7 +145,21 @@ def test_pathbuilder_clone():
     assert basepath in str(pb5.path), "basepath should be part of the cloned path!"
 
 
-def test_pathbuilder_init_invalid():
+def test_output_create_parts():
+    pb = __get_pathbuilder()
+    parts = pb._parts
+    assert output._NUM_PARTS == len(output.ResultParts), "Incorrect number of parts!"
+    assert parts[output.ResultParts.BUILD] == pb.build, "invalid parts index for build!"
+    assert parts[output.ResultParts.CID] == pb.cid, "invalid parts index for cid!"
+    assert parts[output.ResultParts.TAGSIZE] == pb.tagsize, \
+        "invalid parts index for tagsize!"
+    assert parts[output.ResultParts.TAGTYPE] == pb.tagtype, \
+        "invalid parts index for tagtype!"
+    assert parts[output.ResultParts.CONFIG] == pb.config, \
+        "invalid parts index for config!"
+
+
+def test_output_create_invalid():
     with pytest.raises(TypeError):
         # Must specify build
         output.create(config="invalidtest")

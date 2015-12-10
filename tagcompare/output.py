@@ -9,6 +9,8 @@ import glob
 from distutils import dir_util
 import shutil
 
+import enum
+
 import settings
 import logger
 
@@ -18,7 +20,18 @@ DEFAULT_BUILD_NAME = "default"
 DEFAULT_BUILD_PATH = os.path.join(OUTPUT_DIR, DEFAULT_BUILD_NAME)
 LOGGER = logger.Logger(name=__name__, writefile=False).get()
 
-_NUM_PARTS = 5
+
+class ResultParts(enum.IntEnum):
+    """ Enum representing index for build parts used in PathBuilder
+    """
+    BUILD = 0,
+    CID = 1,
+    TAGSIZE = 2,
+    TAGTYPE = 3,
+    CONFIG = 4
+
+
+_NUM_PARTS = len(ResultParts)
 
 
 class PathBuilder(object):
@@ -33,7 +46,7 @@ class PathBuilder(object):
         if len(parts) != _NUM_PARTS:
             raise ValueError("array doesn't have %s parts!" % _NUM_PARTS)
 
-        self.__parts = parts
+        self._parts = parts
         self.basepath = basepath
 
     """
@@ -41,48 +54,48 @@ class PathBuilder(object):
     """
 
     @property
-    def config(self):
-        return self.__parts[1]
-
-    @config.setter
-    def config(self, value):
-        if value:
-            self.__parts[1] = str(value)
-
-    @property
-    def cid(self):
-        return self.__parts[2]
-
-    @cid.setter
-    def cid(self, value):
-        if value:
-            self.__parts[2] = str(value)
-
-    @property
-    def tagsize(self):
-        return self.__parts[3]
-
-    @tagsize.setter
-    def tagsize(self, value):
-        if value:
-            self.__parts[3] = str(value)
-
-    @property
-    def tagtype(self):
-        return self.__parts[4]
-
-    @tagtype.setter
-    def tagtype(self, value):
-        if value:
-            self.__parts[4] = str(value)
-
-    @property
     def build(self):
         """
         Read-only property - can only be set on init or internally
         :return:
         """
-        return self.__parts[0]
+        return self._parts[ResultParts.BUILD]
+
+    @property
+    def cid(self):
+        return self._parts[ResultParts.CID]
+
+    @cid.setter
+    def cid(self, value):
+        if value:
+            self._parts[ResultParts.CID] = str(value)
+
+    @property
+    def tagsize(self):
+        return self._parts[ResultParts.TAGSIZE]
+
+    @tagsize.setter
+    def tagsize(self, value):
+        if value:
+            self._parts[ResultParts.TAGSIZE] = str(value)
+
+    @property
+    def tagtype(self):
+        return self._parts[ResultParts.TAGTYPE]
+
+    @tagtype.setter
+    def tagtype(self, value):
+        if value:
+            self._parts[ResultParts.TAGTYPE] = str(value)
+
+    @property
+    def config(self):
+        return self._parts[ResultParts.CONFIG]
+
+    @config.setter
+    def config(self, value):
+        if value:
+            self._parts[ResultParts.CONFIG] = str(value)
 
     @property
     def path(self):
@@ -111,7 +124,12 @@ class PathBuilder(object):
 
     @property
     def buildpath(self):
-        result = os.path.join(self.basepath, self.build)
+        result = os.path.join(self.basepath, str(self.build))
+        return result
+
+    @property
+    def cidpath(self):
+        result = os.path.join(self.buildpath, str(self.cid))
         return result
 
     """
@@ -121,13 +139,14 @@ class PathBuilder(object):
     def _getpath(self, count=_NUM_PARTS, allow_partial=False):
         result = self.basepath
         for i in range(0, count):
-            p = self.__parts[i]
+            p = self._parts[i]
             if not p:
                 if not allow_partial:
                     raise ValueError("part %s is not set!" % i)
                 return result
             p = str(p)
             result = os.path.join(result, p)
+
         LOGGER.debug("_getpath result: %s", result)
         return result
 
@@ -145,9 +164,9 @@ class PathBuilder(object):
               cid=None, tagsize=None, tagtype=None, basepath=None):
         """Clones the object with default values from self.  Can override specifics
         """
-        original_parts = self.__parts
+        original_parts = self._parts
         new_parts = create(
-            build=build, config=config, cid=cid, tagsize=tagsize, tagtype=tagtype).__parts
+            build=build, config=config, cid=cid, tagsize=tagsize, tagtype=tagtype)._parts
         result_parts = original_parts[:]
 
         if not basepath:
@@ -185,7 +204,12 @@ Factory methods
 
 
 def create(build, config=None, cid=None, tagsize=None, tagtype=None, basepath=OUTPUT_DIR):
-    parts = [build, config, cid, tagsize, tagtype]
+    parts = [None] * _NUM_PARTS
+    parts[ResultParts.BUILD] = build
+    parts[ResultParts.CID] = cid
+    parts[ResultParts.TAGSIZE] = tagsize
+    parts[ResultParts.TAGTYPE] = tagtype
+    parts[ResultParts.CONFIG] = config
     return PathBuilder(parts=parts, basepath=basepath)
 
 
@@ -194,7 +218,7 @@ def create_from_path(dirpath):
     Given a 'dirpath' which corresponds to a path produced by PathBuilder,
     make the PathBuilder object
     :param dirpath: should be a real path ending in
-    '{OUTPUT_DIR}/{build}/{config}/{cid}/{tagsize}/{tagtype}'
+    '{OUTPUT_DIR}/{build}/{cid}/{tagsize}/{tagtype}/{config}'
     """
     if not dirpath or not isinstance(dirpath, basestring):
         raise ValueError(
