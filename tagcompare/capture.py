@@ -66,6 +66,32 @@ def __write_html(tag_html, output_path):
     with open(output_path, 'w') as f:
         f.write(tag_html)
 
+def __capture_preview(pathbuilder, driver,  capture_existing=False):
+    """
+    Captures a preview
+    :param pathbuilder:
+    :param driver:
+    :param capture_existing:
+        False on error, None on skip
+    """
+    # Check if we already have the files from default path
+    default_pb = pathbuilder.clone(build=output.DEFAULT_BUILD_NAME)
+    if default_pb.pathexists() and not capture_existing:
+        LOGGER.debug("Skipping existing captures %s", default_pb.path)
+        return None
+
+    try:
+        webdriver.display_preview(driver, pathbuilder)
+        # Getting ready to write to files
+        pathbuilder.create()
+        tag_element = driver.find_element_by_css_selector("div[style]")
+        webdriver.screenshot_element(driver, tag_element, pathbuilder.tagimage)
+    except selenium.common.exceptions.WebDriverException:
+        LOGGER.exception("Exception while capturing tags!")
+        return False
+
+    return []
+
 
 def __capture_tag(pathbuilder, tags_per_campaign, driver,
                   capture_existing=False):
@@ -120,10 +146,15 @@ def __capture_tags(capabilities, tags, pathbuilder,
                 pathbuilder.tagsize = tagsize
                 for tagtype in tagtypes:
                     pathbuilder.tagtype = tagtype
-                    r = __capture_tag(pathbuilder=pathbuilder,
-                                      tags_per_campaign=tags_per_campaign,
-                                      driver=driver,
-                                      capture_existing=capture_existing)
+                    if "preview" in tagtype:
+                        r = __capture_preview(pathbuilder,
+                                              driver,
+                                              capture_existing)
+                    else:
+                        r = __capture_tag(pathbuilder=pathbuilder,
+                                          tags_per_campaign=tags_per_campaign,
+                                          driver=driver,
+                                          capture_existing=capture_existing)
                     if r is None:
                         num_existing_skipped += 1
                     elif r is False:

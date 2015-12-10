@@ -17,7 +17,8 @@
     },
     "types": {
       "iframe": true,
-      "script": false
+      "script": false,
+      "preview": false
     }
   },
   "saucelabs": {

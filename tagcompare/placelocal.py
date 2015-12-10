@@ -2,6 +2,7 @@ from multiprocessing.pool import ThreadPool
 import json
 from urllib import urlencode
 import time
+import hashlib
 
 import requests
 
@@ -33,6 +34,36 @@ def __get_active_campaigns(pid):
     LOGGER.debug("Found %s active campaigns for publisher %s.  IDs: %s",
                  len(campaigns), pid, result)
     return result
+
+
+def get_campaign_preview_url(cid, size):
+    """
+    Go to the un tbs'ed ad for a size, it only renders as <script>
+    :param cid:
+    :param size:
+    :return:
+    """
+    clearance = __make_clearance(cid)
+    animation_time = 0
+
+    # This route needs the correct dimension/size name to render
+    if "medium_rectangle" in size:
+        size = "rectangle"
+    elif "smartphone_wide" in size:
+        size = "mobile"
+    elif "smartphone_banner" in size:
+        size = "mobile2"
+
+    url = str.format("http://{}/v3/templates?" +
+                     "&optimized=true&playing=true&assetsEnabled=true" +
+                     "&clearance={}&size={}&animationTime={}&id={}",
+                     PL_DOMAIN, clearance, size, animation_time, cid)
+    return url
+
+
+def __make_clearance(cid):
+    clearance = hashlib.md5(cid).hexdigest()
+    return clearance[0:6]
 
 
 def __get_tags(cid):

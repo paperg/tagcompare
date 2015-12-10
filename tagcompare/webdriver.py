@@ -10,6 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import settings
 import image
 import logger
+import placelocal
 
 LOGGER = logger.Logger(name=__name__).get()
 
@@ -83,6 +84,21 @@ def display_tag(driver, tag, wait_for_load=True, wait_time=3):
 
     errors = check_browser_logs(driver)
     return errors
+
+
+def display_preview(driver, pathbuilder, wait_for_load=True, wait_time=3):
+    cid = pathbuilder.cid
+    size = pathbuilder.tagsize
+    url = placelocal.get_campaign_preview_url(cid, size)
+    driver.get(url)
+
+    if wait_for_load:
+        # TODO: implementation is specific to PaperG creatives
+        # Wait until the load spinner goes away
+        load_spinner_locator = (By.CSS_SELECTOR, "img[class*='pl-loader-'")
+        wait_until_element_disappears(driver=driver,
+                                      locator=load_spinner_locator)
+        time.sleep(wait_time)  # For good measure
 
 
 def _make_script(tag):
