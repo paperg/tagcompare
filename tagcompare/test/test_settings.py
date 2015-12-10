@@ -22,14 +22,23 @@ def test_domain():
     assert t, "domain undefined!"
 
 
+def __test_logdir(logdir):
+    assert logdir, "Could not get logdir!"
+    assert os.path.exists(logdir), "logdir was not created on init!"
+
+
 def test_logdir():
     tmpdir = tempfile.gettempdir()
     s = settings.Settings(configfile='test/test_settings.json',
                           comparefile='test/test_compare.json',
                           logdir=tmpdir)
-    logdir = s.logdir
-    assert logdir, "Could not get logdir!"
-    assert os.path.exists(logdir), "logdir was not created on init!"
+    __test_logdir(s.logdir)
+    newdir = "new_logdir"
+    s = settings.Settings(configfile='test/test_settings.json',
+                          comparefile='test/test_compare.json',
+                          logdir=newdir)
+    __test_logdir(s.logdir)
+    os.rmdir(s.logdir)
 
 
 def test_invalid_configfile():

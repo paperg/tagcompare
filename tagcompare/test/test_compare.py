@@ -5,6 +5,7 @@ from tagcompare import compare
 from tagcompare import output
 from tagcompare import settings
 
+
 settings.TEST_MODE = True
 
 
@@ -26,8 +27,8 @@ def test_compare_configs():
 
     build = "testbuild"
     cid = 477944
-    pb = output.PathBuilder(basepath=testpath,
-                            build=build, cid=cid)
+    pb = output.create(basepath=testpath,
+                       build=build, cid=cid)
     build_path_expected = os.path.join(testpath, build)
     assert pb.path == build_path_expected, "Incorrect build path!"
     __test_compare_configs(pb, configs=["chrome", "chrome_beta"],

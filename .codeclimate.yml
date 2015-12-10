@@ -2,7 +2,7 @@ engines:
   radon:
     enabled: true
     config:
-      threshold: 'C'
+      threshold: 'A'
   fixme:
     enabled: true
   pep8:

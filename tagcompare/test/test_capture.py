@@ -23,7 +23,7 @@ def test_capture_configs():
     adsizes = ["medium_rectangle"]
     adtypes = ["iframe"]
 
-    pb = output.PathBuilder(build="capture_test")
+    pb = output.create(build="capture_test")
     errors = capture.__capture_tags_for_configs(cids=cids, pathbuilder=pb,
                                                 configs=configs, comparisons=comparisons,
                                                 tagsizes=adsizes, tagtypes=adtypes,
@@ -38,8 +38,8 @@ def __capture_tag():
                   capture_existing=False):
     :return:
     """
-    pb = output.PathBuilder(build="capture_tag_test", config="testconfig", cid="testcid",
-                            size="skyscraper", type="iframe")
+    pb = output.create(build="capture_tag_test", config="testconfig", cid="testcid",
+                       tagsize="skyscraper", tagtype="iframe")
     tags = {"skyscraper": {
         "iframe": "<b>iframe tag for skyscraper</b>",
         "script": "<b>script tag for skyscraper</b>",

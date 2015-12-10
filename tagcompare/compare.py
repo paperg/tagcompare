@@ -23,7 +23,7 @@ LOGGER = logger.Logger("compare", writefile=True).get()
 
 
 def compare_campaign(cid):
-    pb = output.PathBuilder(cid=cid)
+    pb = output.create(cid=cid)
     compare_configs(pathbuilder=pb, configs=settings.DEFAULT.configs)
 
 
@@ -43,9 +43,11 @@ def compare_configs(pathbuilder, configs):
     for a, b in itertools.combinations(configs, 2):
         for s in sizes:
             for t in types:
-                pba = pathbuilder.clone(build=compare_build, config=a, size=s, type=t,
+                pba = pathbuilder.clone(build=compare_build, config=a, tagsize=s,
+                                        tagtype=t,
                                         cid=pathbuilder.cid)
-                pbb = pathbuilder.clone(build=compare_build, config=b, size=s, type=t,
+                pbb = pathbuilder.clone(build=compare_build, config=b, tagsize=s,
+                                        tagtype=t,
                                         cid=pathbuilder.cid)
                 pba_img = pba.tagimage
                 pbb_img = pbb.tagimage
@@ -123,7 +125,8 @@ def do_all_comparisons(cids=settings.DEFAULT.campaigns,
 
     # Always compare against default job path
     if not pathbuilder:
-        pathbuilder = output.PathBuilder(build=output.generate_build_string())
+        pathbuilder = output.create(
+            build=output.generate_build_string())
 
     for cid in cids:
         pathbuilder.cid = cid
@@ -147,7 +150,7 @@ def main(jobname=None):
     output.aggregate()
     if not jobname:
         jobname = output.generate_build_string()
-    pb = output.PathBuilder(build=jobname)
+    pb = output.create(build=jobname)
     do_all_comparisons(cids=settings.DEFAULT.campaigns,
                        pids=settings.DEFAULT.publishers, pathbuilder=pb)
 

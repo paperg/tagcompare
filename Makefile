@@ -10,8 +10,8 @@ test: install flake
 	PYTHONPATH=. py.test -s -m "not integration" --cov-config .coveragerc --cov-report=term-missing --cov=tagcompare tagcompare/test/
 
 .PHONY: test-all
-test-all: install flake
-	PYTHONPATH=. py.test -s --cov-config .coveragerc --cov-report=term-missing --cov=tagcompare tagcompare/test/
+test-all: install flake test
+	PYTHONPATH=. py.test -s -m "integration" --cov-append --cov-config .coveragerc --cov-report=term-missing --cov=tagcompare tagcompare/test/
 
 # Do a funn run including gather image and compare them
 .PHONY: run

@@ -72,11 +72,11 @@ def __capture_tag(pathbuilder, tags_per_campaign, capabilities,
 
     driver = webdriver.setup_webdriver(capabilities)
     try:
-        tag_html = tags_per_campaign[pathbuilder.size][pathbuilder.type]
+        tag_html = tags_per_campaign[pathbuilder.tagsize][pathbuilder.tagtype]
         errors = webdriver.display_tag(driver, tag_html)
         # Getting ready to write to files
         pathbuilder.create()
-        tag_element = driver.find_element_by_tag_name(pathbuilder.type)
+        tag_element = driver.find_element_by_tag_name(pathbuilder.tagtype)
         webdriver.screenshot_element(driver, tag_element, pathbuilder.tagimage)
     except selenium.common.exceptions.WebDriverException:
         LOGGER.exception("Exception while capturing tags!")
@@ -103,9 +103,9 @@ def __capture_tags(capabilities, tags, pathbuilder,
         # TODO: Refactor better with __capture_tag
         # It's weird that we pass in a pathbuilder object and do two nested loops here
         for tagsize in tagsizes:
-            pathbuilder.size = tagsize
+            pathbuilder.tagsize = tagsize
             for tagtype in tagtypes:
-                pathbuilder.type = tagtype
+                pathbuilder.tagtype = tagtype
                 r = __capture_tag(pathbuilder=pathbuilder,
                                   tags_per_campaign=tags_per_campaign,
                                   capabilities=capabilities,
@@ -132,7 +132,7 @@ def main(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.publishers):
     :return:
     """
     build = output.generate_build_string()
-    pathbuilder = output.PathBuilder(build=build)
+    pathbuilder = output.create(build=build)
     cids = placelocal.get_cids(cids=cids, pids=pids)
     output.aggregate()
     __capture_tags_for_configs(cids=cids, pathbuilder=pathbuilder)
