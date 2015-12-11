@@ -38,7 +38,6 @@ def __test_screenshot_tag(testdriver):
 
     # Cleanup
     os.remove(screenshot_path)
-    os.remove(screenshot_path + ".bak")
 
 
 def __test_webdriver_display_tag(testdriver):
