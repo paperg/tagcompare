@@ -14,6 +14,12 @@ OUTPUT_DIR = os.path.join("/tmp/", MODULE_NAME)
 LOG_LEVEL = logging.INFO
 
 
+class Test:
+    TEST_DIR = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), "test"))
+    TEST_ASSETS_DIR = os.path.join(TEST_DIR, "assets")
+
+
 class ImageErrorThreshold(IntEnum):
     NONE = 0,
     SLIGHT = 100,

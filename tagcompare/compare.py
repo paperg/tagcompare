@@ -1,12 +1,16 @@
-"""We want to make a set of comparisons factoring in popular browser/OS variations
-    Comparisons are determined from usage stats:
-        - OS usage stats: http://www.w3schools.com/browsers/browsers_os.asp
-        - Browser usage stats: http://www.w3schools.com/browsers/browsers_stats.asp
+"""
+We want to make a set of comparisons factoring in popular browser/OS variations
 
-    Configs are made based on supported capabilities:
-    - saucelabs:
+Comparisons are determined from usage stats:
+- OS usage stats:
+    http://www.w3schools.com/browsers/browsers_os.asp
+- Browser usage stats:
+    http://www.w3schools.com/browsers/browsers_stats.asp
+
+Configs are made based on supported capabilities:
+- saucelabs:
     https://wiki.saucelabs.com/display/DOCS/Platform+Configurator#/
-    - browserstack:
+- browserstack:
     https://www.browserstack.com/list-of-browsers-and-platforms?product=automate
 """
 import itertools
@@ -42,37 +46,40 @@ def compare_configs(pathbuilder, configs):
     for a, b in itertools.combinations(configs, 2):
         for s in sizes:
             for t in types:
-                pba = output.create(build=compare_build, config=a, tagsize=s,
-                                    tagtype=t, cid=cid)
+                pba = pathbuilder.clone(build=compare_build, config=a,
+                                        tagsize=s,
+                                        tagtype=t, cid=cid)
                 pbb = pba.clone(config=b)
                 pba_img = pba.tagimage
                 pbb_img = pbb.tagimage
                 count += 1
 
                 result_pb = pba.clone(build=build)
-                compare_result = compare_images(pba_img, pbb_img, pathbuilder=result_pb)
+                compare_result = compare_images(pba_img, pbb_img,
+                                                pathbuilder=result_pb)
                 if compare_result is None:
                     skipcount += 1
                 elif compare_result is False:
                     errorcount += 1
 
-    LOGGER.debug("Compared %s images: %s errors, %s skipped", count, errorcount,
+    LOGGER.debug("Compared %s images: %s errors, %s skipped", count,
+                 errorcount,
                  skipcount)
     return errorcount, count, skipcount
 
 
 def compare_images(file1, file2, pathbuilder):
-    """Compares two image files, returns True if compare took place, False otherwise
+    """Compares two image files.
+        Returns True if compare took place, False otherwise
     :param file1:
     :param file2:
     :return:
     """
-    compare_name = __get_compare_name(file1, file2)
     if not os.path.exists(file1):
-        LOGGER.warn("SKIPPING %s - %s not found!", compare_name, file1)
+        LOGGER.warn("SKIPPING compare - %s not found!", file1)
         return None
     if not os.path.exists(file2):
-        LOGGER.warn("SKIPPING %s - %s not found!", compare_name, file2)
+        LOGGER.warn("SKIPPING compare - %s not found!", file2)
         return None
 
     diff = image.compare(file1, file2)
@@ -82,11 +89,13 @@ def compare_images(file1, file2, pathbuilder):
 
     # Write likely errors to the cidpath, otherwise write to the tagpath
     if diff > settings.ImageErrorThreshold.MODERATE:
-        p = __write_merged_image(file1, file2, diff, outputpath=pathbuilder.cidpath)
+        p = __write_merged_image(file1, file2, diff,
+                                 outputpath=pathbuilder.cidpath)
         LOGGER.warn("IMAGE_DIFF: %s, see %s", diff, p)
         return False
     elif diff > settings.ImageErrorThreshold.SLIGHT:
-        __write_merged_image(file1, file2, diff, outputpath=pathbuilder.tagpath)
+        __write_merged_image(file1, file2, diff,
+                             outputpath=pathbuilder.tagpath)
     return True
 
 
@@ -99,8 +108,10 @@ def __get_compare_name(file1, file2):
 
 
 def __write_merged_image(file1, file2, diff, outputpath):
-    assert os.path.exists(file1), "file1 doesn't exist at path {}".format(file1)
-    assert os.path.exists(file2), "file2 doesn't exist at path {}".format(file2)
+    assert os.path.exists(file1), "file1 doesn't exist at path {}".format(
+        file1)
+    assert os.path.exists(file2), "file2 doesn't exist at path {}".format(
+        file2)
     compare_name = __get_compare_name(file1, file2)
 
     # Generate additional info in output
@@ -136,8 +147,9 @@ def do_all_comparisons(cids=settings.DEFAULT.campaigns,
         for name in comparisons:
             LOGGER.debug("*** Comparing set: %s...", name)
             configs_to_compare = comparisons[name]
-            errors, count, skipped = compare_configs(pathbuilder=pathbuilder,
-                                                     configs=configs_to_compare)
+            errors, count, skipped = compare_configs(
+                pathbuilder=pathbuilder,
+                configs=configs_to_compare)
             total_errors += errors
             total_compares += count
             total_skipped += skipped

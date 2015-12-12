@@ -3,8 +3,9 @@ import json
 
 import pytest
 
+from tagcompare import settings
+
 from tagcompare import placelocal
-import helper
 
 
 def __read_json_file(jsonfile):
@@ -13,7 +14,8 @@ def __read_json_file(jsonfile):
 
 
 def __validate_tags(tags):
-    expected_tags_file = os.path.join(helper.TEST_ASSETS_DIR, "test_tags.json")
+    expected_tags_file = os.path.join(settings.Test.TEST_ASSETS_DIR,
+                                      "test_tags.json")
     actual_tags_file = 'tmp_tags.json'
     with open(actual_tags_file, 'w') as actual_tags:
         json.dump(tags, actual_tags)
