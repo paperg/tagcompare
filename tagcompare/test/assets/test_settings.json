@@ -20,18 +20,8 @@
       "script": false
     }
   },
-  "webdriver": {
-    "browserstack": {
-      "enabled": false,
-      "user": "USER",
-      "key": "KEY",
-      "url": "hub.browserstack.com:80/wd/hub"
-    },
-    "saucelabs": {
-      "enabled": true,
-      "user": "USER",
-      "key": "KEY",
-      "url": "ondemand.saucelabs.com:80/wd/hub"
-    }
+  "saucelabs": {
+    "user": "TEST_USER",
+    "key": "TEST_KEY"
   }
 }

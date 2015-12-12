@@ -28,6 +28,12 @@ class ImageErrorThreshold(IntEnum):
     SEVERE = 1000
 
 
+class Env:
+    SAUCE_USER = "SAUCE_USER"
+    SAUCE_KEY = "SAUCE_KEY"
+    PL_SECRET = "PL_SECRET"
+    PL_SERVICE_ID = "PL_SERVICE_ID"
+
 # Used by tests to access special conditions
 TEST_MODE = False
 
@@ -106,7 +112,7 @@ class Settings():
 
     @property
     def domain(self):
-        return self.placelocal['domain']
+        return self._placelocal['domain']
 
     @property
     def tag(self):
@@ -129,23 +135,11 @@ class Settings():
         return self._settings['publishers']
 
     @property
-    def webdriver(self):
-        """
-        Gets the remote webdriver settings to use
-
-        saucelabs:
-        https://wiki.saucelabs.com/display/DOCS/Platform+Configurator#/
-        browserstack:
-        https://www.browserstack.com/list-of-browsers-and-platforms?product=automate
-        """
-        webdriver_profiles = self._settings['webdriver']
-        for name in webdriver_profiles:
-            if webdriver_profiles[name]['enabled']:
-                return webdriver_profiles[name]
-        raise ValueError("No webdriver profile is marked as enabled!")
+    def _saucelabs(self):
+        return self._settings['saucelabs']
 
     @property
-    def placelocal(self):
+    def _placelocal(self):
         return self._settings['placelocal']
 
     @property
@@ -172,6 +166,33 @@ class Settings():
         :return:
         """
         return get_unique_configs_from_comparisons(self.comparisons)
+
+    def get_saucelabs_user(self, env=Env.SAUCE_USER):
+        value = os.environ.get(env)
+        if value:
+            return value
+        return self._saucelabs['user']
+
+    def get_saucelabs_key(self, env=Env.SAUCE_KEY):
+        value = os.environ.get(env)
+        if value:
+            return value
+        return self._saucelabs['key']
+
+    def get_placelocal_headers(self,
+                               id_env=Env.PL_SERVICE_ID,
+                               secret_env=Env.PL_SECRET):
+        id = os.environ.get(id_env)
+        secret = os.environ.get(secret_env)
+        if id and secret:
+            headers = {
+                "pl-secret": secret,
+                "pl-service-identifier": id
+            }
+            return headers
+        headers = self._placelocal['secret']
+        print("get_placelocal_headers: %s" % headers)
+        return headers
 
 
 # TODO: not sure if this is proper...

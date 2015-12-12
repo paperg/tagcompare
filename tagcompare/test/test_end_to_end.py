@@ -11,7 +11,7 @@ from tagcompare import compare
 SETTINGS = settings.Settings(comparefile='test/assets/test_compare.json')
 
 
-@pytest.mark.integration
+@pytest.mark.e2e
 def test_end_to_end():
     cids = [477944]
     build = "test_e2e_build"

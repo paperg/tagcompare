@@ -20,18 +20,17 @@ platform/browser configurations
 
 ### settings.json
 Make a local copy of [`settings.json`](tagcompare/settings.json) called `settings.local.json`
-Update the values for webdriver user/key and placelocal secret:
+Update all the `null` values for saucelabs and placelocal:
 ```json
-  "webdriver": {
-    "user": "USER",
-    "key": "KEY",
-    "url": "REMOTE_WEBDRIVER_URL"
+  "saucelabs": {
+    "user": null,
+    "key": null
   },
   "placelocal": {
     "domain": "www.placelocaldemo.com",
     "secret": {
-      "pl-secret": "SECRET",
-      "pl-service-identifier": "SERVICEID"
+      "pl-secret": null,
+      "pl-service-identifier": null
     }
   }
 ```

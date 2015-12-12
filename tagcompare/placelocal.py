@@ -14,18 +14,13 @@ PL_DOMAIN = settings.DEFAULT.domain
 LOGGER = logger.Logger(__name__).get()
 
 
-def _read_placelocal_api_headers():
-    headers = settings.DEFAULT.placelocal['secret']
-    return headers
-
-
 def __get_active_campaigns(pid):
     url = str.format(
         "https://{}/api/v2/publication/{}/campaigns?status=active",
         PL_DOMAIN, pid)
-    r = requests.get(url, headers=_read_placelocal_api_headers())
+    r = requests.get(url, headers=settings.DEFAULT.get_placelocal_headers())
     if r.status_code != 200:
-        LOGGER.error("getActiveCampaigns %s - API error: %s", url, r)
+        LOGGER.error("getActiveCampaigns error: %s", r.text)
         return []
 
     data = json.loads(r.text)
@@ -56,9 +51,9 @@ def __get_tags(cid):
         {"ispreview": 0, "isae": 0, "animationtime": settings.TAG_ANIMATION_TIME,
          "usetagmacros": 0})
     url += qp
-    r = requests.get(url, headers=_read_placelocal_api_headers())
+    r = requests.get(url, headers=settings.DEFAULT.get_placelocal_headers())
     if r.status_code != 200:
-        LOGGER.error("getTags: error: %s", r)
+        LOGGER.error("getTags error: %s", r.text)
         return None
 
     tags_data = json.loads(r.text)['data']['http_ad_tags']
@@ -67,7 +62,9 @@ def __get_tags(cid):
                        tags_data)
         return None
 
-    LOGGER.debug("__get_tags result: %s\n\n\n", tags_data)
+    if not isinstance(tags_data, dict):
+        raise ValueError("tag_data is not a dict!:\n %s", tags_data)
+    LOGGER.debug("__get_tags result:\n%s\n\n\n", tags_data)
     return tags_data
 
 

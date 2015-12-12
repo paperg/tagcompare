@@ -1,8 +1,6 @@
 import tempfile
 import os
 
-import pytest
-
 from tagcompare import settings
 
 
@@ -72,12 +70,39 @@ def test_tagtypes():
     assert len(enabled_types) == 1, "There should be exactly 1 enabled types!"
 
 
-def test_webdriver():
-    webdriver_settings = SETTINGS.webdriver
-    assert webdriver_settings, "Could not get webdriver settings!"
-    invalid = settings.Settings(configfile='test/assets/test_settings_invalid.json')
-    with pytest.raises(ValueError):
-        print "This should raise ValueError: %s" % invalid.webdriver
+def test_saucelabs():
+    sauce_settings = SETTINGS._saucelabs
+    assert sauce_settings, "Could not get saucelabs settings!"
+    user = SETTINGS.get_saucelabs_user(env=None)
+    assert user == "TEST_USER", "Did not read sauce user from JSON!"
+    key = SETTINGS.get_saucelabs_key(env=None)
+    assert key == "TEST_KEY", "Did not read sauce key from JSON!"
+
+    # test env override (default behavior) if env vars are set
+    expected_user = os.environ.get(settings.Env.SAUCE_USER)
+    expected_key = os.environ.get(settings.Env.SAUCE_KEY)
+    print "\n\n\nDEBUG:" + str(expected_key)  # TODO
+    if expected_user:
+        user = SETTINGS.get_saucelabs_user()
+        assert user == expected_user, "Did not get sauce user from env!"
+    if expected_key:
+        key = SETTINGS.get_saucelabs_key()
+        assert key == expected_key, "Did not get sauce key from env!"
+
+
+def test_get_placelocal_headers():
+    headers1 = SETTINGS.get_placelocal_headers(id_env=None, secret_env=None)
+    expected_headers = {
+        "pl-secret": "SECRET",
+        "pl-service-identifier": "ID"
+    }
+    assert headers1 == expected_headers
+
+    os.environ[settings.Env.PL_SECRET] = 'SECRET'
+    os.environ[settings.Env.PL_SERVICE_ID] = 'ID'
+    # Get headers from env
+    headers2 = SETTINGS.get_placelocal_headers()
+    assert headers2 == headers1
 
 
 def test_configs():

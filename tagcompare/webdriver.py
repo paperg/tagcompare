@@ -26,10 +26,10 @@ def __setup_remote_webdriver(capabilities):
 
     # Update capabilities
     capabilities['public'] = 'share'
-    user = settings.DEFAULT.webdriver['user']
-    key = settings.DEFAULT.webdriver['key']
-    remote_webdriver_url = "http://{}:{}@{}".format(
-        user, key, settings.DEFAULT.webdriver['url'])
+    user = settings.DEFAULT.get_saucelabs_user()
+    key = settings.DEFAULT.get_saucelabs_key()
+    remote_webdriver_url = "http://{}:{}@ondemand.saucelabs.com:80/wd/hub".format(
+        user, key)
     driver = webdriver.Remote(
         command_executor=remote_webdriver_url,
         desired_capabilities=capabilities)
