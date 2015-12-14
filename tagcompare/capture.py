@@ -1,4 +1,5 @@
 from multiprocessing.pool import ThreadPool
+import os
 
 import selenium
 
@@ -7,6 +8,7 @@ import webdriver
 import output
 import settings
 import logger
+
 
 LOGGER = logger.Logger(name="capture", writefile=True).get()
 
@@ -57,6 +59,9 @@ def __write_html(tag_html, output_path):
     if not output_path.endswith('.html'):
         output_path += ".html"
 
+    if os.path.exists(output_path):
+        return
+
     LOGGER.debug("Writing html tag to file at %s", output_path)
     with open(output_path, 'w') as f:
         f.write(tag_html)
@@ -96,7 +101,8 @@ def __capture_tag(pathbuilder, tags_per_campaign, driver,
 
 
 def __capture_tags(capabilities, tags, pathbuilder,
-                   tagsizes=settings.DEFAULT.tagsizes, tagtypes=settings.DEFAULT.tagtypes,
+                   tagsizes=settings.DEFAULT.tagsizes,
+                   tagtypes=settings.DEFAULT.tagtypes,
                    capture_existing=False):
     num_existing_skipped = 0
     num_captured = 0

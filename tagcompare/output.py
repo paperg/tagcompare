@@ -107,8 +107,8 @@ class PathBuilder(object):
 
     @property
     def tagname(self):
-        result = str.format("{}-{}-{}-{}",
-                            self.config, self.cid, self.tagsize, self.tagtype)
+        result = str.format("{}-{}-{}",
+                            self.cid, self.tagsize, self.tagtype)
         return result
 
     @property
@@ -123,8 +123,9 @@ class PathBuilder(object):
 
     @property
     def tagimage(self):
+        imagename = "{}-{}.png".format(self.config, self.tagname)
         result = os.path.join(self._getpath(allow_partial=False),
-                              self.tagname + ".png")
+                              imagename)
         return result
 
     @property
@@ -177,7 +178,8 @@ class PathBuilder(object):
         """
         original_parts = self._parts
         new_parts = create(
-            build=build, config=config, cid=cid, tagsize=tagsize, tagtype=tagtype)._parts
+            build=build, config=config, cid=cid, tagsize=tagsize,
+            tagtype=tagtype)._parts
         result_parts = original_parts[:]
 
         if not basepath:
@@ -214,7 +216,8 @@ Factory methods
 """
 
 
-def create(build, config=None, cid=None, tagsize=None, tagtype=None, basepath=OUTPUT_DIR):
+def create(build, config=None, cid=None, tagsize=None, tagtype=None,
+           basepath=OUTPUT_DIR):
     parts = [None] * _NUM_PARTS
     parts[ResultParts.BUILD] = build
     parts[ResultParts.CID] = cid

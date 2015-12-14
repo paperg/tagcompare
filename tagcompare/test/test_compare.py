@@ -1,6 +1,8 @@
 import os
 import shutil
 
+import pytest
+
 from tagcompare import compare
 from tagcompare import output
 from tagcompare import settings
@@ -9,6 +11,8 @@ from tagcompare import settings
 settings.TEST_MODE = True
 
 
+# TODO: Should add unit tests to this test
+@pytest.mark.integration
 def test_compare_configs():
     """
     def compare_configs(pathbuilder, configs):
@@ -18,7 +22,6 @@ def test_compare_configs():
     expected_aggregate_path = os.path.join(testpath, output.DEFAULT_BUILD_NAME)
 
     # Make sure we aggregate before a compare
-    # TODO: This test is more like an integration test in that it tests aggregation
     assert not os.path.exists(
         expected_aggregate_path), "aggregate path already exists!"
     aggregate_path = output.aggregate(outputdir=testpath)
@@ -36,6 +39,7 @@ def test_compare_configs():
     __test_compare_configs(pb, configs=["chrome", "firefox"],
                            expected_errors=3, expected_total=4,
                            expected_skips=0)
+    # TODO: On test fail - the aggregate path stays
     shutil.rmtree(aggregate_path)
 
 
