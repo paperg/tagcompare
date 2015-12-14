@@ -88,12 +88,17 @@ def compare_images(file1, file2, pathbuilder):
         return False
 
     # Write likely errors to the cidpath, otherwise write to the tagpath
+    if diff > settings.ImageErrorThreshold.BAD:
+        p = __write_merged_image(file1, file2, diff,
+                                 outputpath=pathbuilder.buildpath)
+        LOGGER.warn("IMAGE_DIFF: %s, see %s", diff, p)
+        return False
     if diff > settings.ImageErrorThreshold.MODERATE:
         p = __write_merged_image(file1, file2, diff,
                                  outputpath=pathbuilder.cidpath)
         LOGGER.warn("IMAGE_DIFF: %s, see %s", diff, p)
         return False
-    elif diff > settings.ImageErrorThreshold.SLIGHT:
+    if diff > settings.ImageErrorThreshold.SLIGHT:
         __write_merged_image(file1, file2, diff,
                              outputpath=pathbuilder.tagpath)
     return True
@@ -160,10 +165,12 @@ def do_all_comparisons(cids=settings.DEFAULT.campaigns,
     LOGGER.info("See additional logs at: %s", pathbuilder.buildpath)
 
 
-def main(jobname=None):
+def main(build=None):
     output.aggregate()
-    if not jobname:
-        jobname = "compare_" + output.generate_build_string()
+
+    if not build:
+        build = output.generate_build_string()
+    jobname = "compare_" + build
     pb = output.create(build=jobname)
     do_all_comparisons(cids=settings.DEFAULT.campaigns,
                        pids=settings.DEFAULT.publishers, pathbuilder=pb)

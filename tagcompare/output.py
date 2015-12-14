@@ -279,6 +279,7 @@ def aggregate(outputdir=OUTPUT_DIR):
     if not os.path.exists(outputdir):
         raise ValueError("outputdir does not exist at %s!" % outputdir)
 
+    # Aggregate all the capture job data
     outputdir = str(outputdir).rstrip('/')
     buildpaths = glob.glob(outputdir + '/*/')
     aggregate_path = os.path.join(outputdir, DEFAULT_BUILD_NAME)
@@ -294,6 +295,9 @@ def aggregate(outputdir=OUTPUT_DIR):
     for buildpath in buildpaths:
         if str(buildpath).endswith(DEFAULT_BUILD_NAME + "/"):
             # Don't do this for the default build
+            continue
+        if str(buildpath).startswith("compare_"):
+            # Skip compare builds
             continue
 
         buildpath = os.path.join(outputdir, buildpath)

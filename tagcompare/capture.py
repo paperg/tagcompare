@@ -137,20 +137,20 @@ def __capture_tags(capabilities, tags, pathbuilder,
     return browser_errors
 
 
-def main(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.publishers, build=None):
+def main(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.publishers):
     """
     Runs capture, returns the job name for the capture job
     :param cids:
     :param pids:
     :return:
     """
-    if not build:
-        build = "capture_" + output.generate_build_string()
+    original_build = output.generate_build_string()
+    build = "capture_" + original_build
     pathbuilder = output.create(build=build)
     cids = placelocal.get_cids(cids=cids, pids=pids)
     output.aggregate()
     __capture_tags_for_configs(cids=cids, pathbuilder=pathbuilder)
-    return build
+    return original_build
 
 
 if __name__ == '__main__':
