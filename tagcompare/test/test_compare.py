@@ -1,9 +1,5 @@
-import os
-import shutil
-
-import pytest
-
 from tagcompare import compare
+
 from tagcompare import output
 from tagcompare import settings
 
@@ -11,46 +7,48 @@ from tagcompare import settings
 settings.TEST_MODE = True
 
 
-# TODO: Should add unit tests to this test
-@pytest.mark.integration
+def test_compare():
+    """
+    def compare(pb, cids=None, sizes=settings.DEFAULT.tagsizes,
+            types=settings.DEFAULT.tagtypes,
+            comparison="latest",
+            configs=None):
+    :return:
+    """
+    testpath = settings.Test.TEST_ASSETS_DIR
+    build = "testcompare"
+    cids = [477944]
+    comparison = "latest"
+    pb = output.create(build=build, basepath=testpath)
+    result = compare.compare(pb=pb, cids=cids, comparison=comparison)
+    assert result.result[settings.ImageErrorLevel.INVALID] == 0, \
+        "There should be 0 invalid results!"
+    assert result.result[settings.ImageErrorLevel.SLIGHT] == 0
+    assert result.result[settings.ImageErrorLevel.MODERATE] == 1
+    assert result.result[settings.ImageErrorLevel.SEVERE] == 3
+    assert result.result[settings.ImageErrorLevel.NONE] == 0
+    pb.rmbuild()
+
+
 def test_compare_configs():
     """
     def compare_configs(pathbuilder, configs):
     :return:
     """
     testpath = settings.Test.TEST_ASSETS_DIR
-    expected_aggregate_path = os.path.join(testpath, output.DEFAULT_BUILD_NAME)
-
-    # Make sure we aggregate before a compare
-    assert not os.path.exists(
-        expected_aggregate_path), "aggregate path already exists!"
-    aggregate_path = output.aggregate(outputdir=testpath)
-    assert aggregate_path == expected_aggregate_path, \
-        "aggregate path is not as expected!"
-    assert os.path.exists(aggregate_path), "aggregate path doesn't exist!"
-
     build = "testbuild"
     cid = 477944
     pb = output.create(basepath=testpath,
-                       build=build, cid=cid)
-    __test_compare_configs(pb, configs=["chrome", "chrome_beta"],
-                           expected_errors=0, expected_total=4,
-                           expected_skips=0)
-    __test_compare_configs(pb, configs=["chrome", "firefox"],
-                           expected_errors=3, expected_total=4,
-                           expected_skips=0)
-    # TODO: On test fail - the aggregate path stays
-    shutil.rmtree(aggregate_path)
+                       build=build, cid=cid,
+                       tagsize="medium_rectangle", tagtype="iframe")
+    __test_compare_configs_internal(pb, configs=["chrome", "chrome_beta"],
+                                    expected_result=0)
+    __test_compare_configs_internal(pb, configs=["chrome", "firefox"],
+                                    expected_result=214)
 
 
-def __test_compare_configs(pb, configs, expected_errors, expected_total,
-                           expected_skips):
-    errors, total, skips = compare.compare_configs(
+def __test_compare_configs_internal(pb, configs, expected_result):
+    result = compare._compare_configs_internal(
         pathbuilder=pb, configs=configs)
-
-    assert errors == expected_errors, \
-        "Compare test configs: %s - Should be 0 errors!" % configs
-    assert total == expected_total, \
-        "Compare test configs: %s - Should be 4 compares!" % configs
-    assert skips == expected_skips, \
-        "Compare test configs: %s - Should be 0 skips!" % configs
+    assert result != settings.ImageErrorLevel.INVALID, "Invalid result!"
+    assert result == expected_result, "Result was not expected!"

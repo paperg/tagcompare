@@ -3,6 +3,7 @@ import shutil
 
 import pytest
 
+from tagcompare import settings
 from tagcompare import output
 
 
@@ -12,7 +13,8 @@ TESTPATH = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 def __assert_correct_path(pathbuilder):
     expectedstr = "{}/{}/{}/{}/{}/{}".format(
         pathbuilder.basepath, pathbuilder.build,
-        pathbuilder.cid, pathbuilder.tagsize, pathbuilder.tagtype, pathbuilder.config)
+        pathbuilder.cid, pathbuilder.tagsize, pathbuilder.tagtype,
+        pathbuilder.config)
     print "expected: {}".format(expectedstr)
     print "actual: {}".format(pathbuilder.path)
     assert str(pathbuilder.path).endswith(expectedstr)
@@ -68,7 +70,8 @@ def test_pathbuilder_create():
     pathbuilder = __get_pathbuilder()
     result = pathbuilder.create()
     print "result path: {}".format(result)
-    assert pathbuilder.pathexists(), "result path '{}' wasn't created!".format(result)
+    assert pathbuilder.pathexists(), "result path '{}' wasn't created!".format(
+        result)
 
     # Make sure the structure is proper
     __assert_correct_path(pathbuilder)
@@ -100,21 +103,18 @@ def test_pathbuilder_path():
 
 
 def test_aggregate():
-    result = output.aggregate()
-    assert result == output.DEFAULT_BUILD_PATH, "output.aggregate() was not successful!"
-    assert os.path.exists(result), "Aggregate result path does not exist: %s!" % result
+    assetsdir = settings.Test.TEST_ASSETS_DIR
+    testbuild = "testaggregate"
+    result = output.aggregate(outputdir=assetsdir,
+                              buildname=testbuild)
+    expected_dir = os.path.join(assetsdir, testbuild)
+    assert result == expected_dir, "Did not create correct aggregate dir"
+    assert os.path.exists(
+        result), "Aggregate result path does not exist: %s!" % result
+    shutil.rmtree(result)
 
     with pytest.raises(ValueError):
         output.aggregate(outputdir="invalid/path")
-
-
-def test_aggregate_custom():
-    asset_path = os.path.join(TESTPATH, "assets")
-    custom_dir = output.aggregate(outputdir=asset_path)
-    assert os.path.exists(custom_dir), "Aggregate dir should exist!"
-    children = os.listdir(asset_path)
-    assert output.DEFAULT_BUILD_NAME in children, "There should be stuff aggregated!"
-    shutil.rmtree(custom_dir)
 
 
 def test_parse_path():
@@ -174,7 +174,8 @@ def test_output_create_parts():
     pb = __get_pathbuilder()
     parts = pb._parts
     assert output._NUM_PARTS == len(output.ResultParts), "Incorrect number of parts!"
-    assert parts[output.ResultParts.BUILD] == pb.build, "invalid parts index for build!"
+    assert parts[output.ResultParts.BUILD] == pb.build, \
+        "invalid parts index for build!"
     assert parts[output.ResultParts.CID] == pb.cid, "invalid parts index for cid!"
     assert parts[output.ResultParts.TAGSIZE] == pb.tagsize, \
         "invalid parts index for tagsize!"

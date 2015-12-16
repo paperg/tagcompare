@@ -20,16 +20,28 @@ def test_capture_configs():
     :return:
     """
     cids = [477944]
-    configs = SETTINGS.configs
-    comparisons = {
-        "test": ["chrome", "firefox"]
-    }
+    configs = {
+        "chrome": {
+            "enabled": True,
+            "capabilities": {
+                "platform": "Windows 7",
+                "browserName": "chrome"
+            }
+        },
+        "chrome_beta": {
+            "enabled": True,
+            "capabilities": {
+                "platform": "Windows 7",
+                "browserName": "chrome",
+                "version": "beta"
+            }
+        }}
     adsizes = ["medium_rectangle"]
     adtypes = ["iframe"]
 
     pb = output.create(build="capture_test")
     errors = capture.__capture_tags_for_configs(cids=cids, pathbuilder=pb,
-                                                configs=configs, comparisons=comparisons,
+                                                configs=configs,
                                                 tagsizes=adsizes, tagtypes=adtypes,
                                                 capture_existing=True)
     assert errors, "There should be at least one error!"

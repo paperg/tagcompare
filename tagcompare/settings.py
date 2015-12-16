@@ -10,7 +10,8 @@ DEFAULT_FILENAME = "settings.json"
 DEFAULT_LOCAL_FILENAME = "settings.local.json"
 DEFAULT_COMPARE_FILENAME = "compare.json"
 
-OUTPUT_DIR = os.path.join("/tmp/", MODULE_NAME)
+HOME_DIR = os.path.expanduser("~")
+OUTPUT_DIR = os.path.join(HOME_DIR, MODULE_NAME)
 LOG_LEVEL = logging.INFO
 
 
@@ -20,12 +21,12 @@ class Test:
     TEST_ASSETS_DIR = os.path.join(TEST_DIR, "assets")
 
 
-class ImageErrorThreshold(IntEnum):
+class ImageErrorLevel(IntEnum):
+    INVALID = -1
     NONE = 0,
     SLIGHT = 100,
     MODERATE = 250,
-    BAD = 500,
-    SEVERE = 1000
+    SEVERE = 500
 
 
 class Env:
@@ -191,7 +192,7 @@ class Settings():
             }
             return headers
         headers = self._placelocal['secret']
-        print("get_placelocal_headers: %s" % headers)
+        logging.debug("get_placelocal_headers: %s", headers)
         return headers
 
 
