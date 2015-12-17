@@ -274,7 +274,7 @@ def _split_pathstr(pathstr, count):
     return allparts
 
 
-def aggregate(outputdir=OUTPUT_DIR):
+def aggregate(outputdir=OUTPUT_DIR, buildname=DEFAULT_BUILD_NAME):
     """
     Aggregates the captures from various campaigns to the 'default'
     :return:
@@ -285,7 +285,7 @@ def aggregate(outputdir=OUTPUT_DIR):
     # Aggregate all the capture job data
     outputdir = str(outputdir).rstrip('/')
     buildpaths = glob.glob(outputdir + '/*/')
-    aggregate_path = os.path.join(outputdir, DEFAULT_BUILD_NAME)
+    aggregate_path = os.path.join(outputdir, buildname)
 
     if not os.path.exists(aggregate_path):
         LOGGER.debug("Creating path for aggregates at %s", aggregate_path)
@@ -298,16 +298,14 @@ def aggregate(outputdir=OUTPUT_DIR):
     for buildpath in buildpaths:
         if str(buildpath).endswith(DEFAULT_BUILD_NAME + "/"):
             # Don't do this for the default build
-            continue
-        if str(buildpath).startswith("compare_"):
-            # Skip compare builds
+            LOGGER.debug("Skipping default path: %s", buildpath)
             continue
 
-        buildpath = os.path.join(outputdir, buildpath)
+        sourcepath = os.path.join(outputdir, buildpath)
         LOGGER.debug("Copying from %s to %s", buildpath,
                      aggregate_path)
 
-        dir_util.copy_tree(buildpath, aggregate_path, update=1)
+        dir_util.copy_tree(sourcepath, aggregate_path, update=1)
     return aggregate_path
 
 

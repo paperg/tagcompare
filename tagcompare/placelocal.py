@@ -64,7 +64,7 @@ def __get_tags(cid):
 
     if not isinstance(tags_data, dict):
         raise ValueError("tag_data is not a dict!:\n %s", tags_data)
-    LOGGER.debug("__get_tags result:\n%s\n\n\n", tags_data)
+    # LOGGER.debug("__get_tags result:\n%s\n\n\n", tags_data)
     return tags_data
 
 

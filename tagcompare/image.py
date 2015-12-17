@@ -21,7 +21,7 @@ def compare(file1, file2):
     return result
 
 
-def merge_images(file1, file2):
+def merge_image_files(file1, file2, label1=None, label2=None):
     """Merge two images into one, displayed side by side
     :param file1:
     :param file2:
@@ -29,15 +29,31 @@ def merge_images(file1, file2):
     """
     image1 = normalize_img(file1)
     image2 = normalize_img(file2)
+    return merge_images(image1, image2)
 
-    (width, height) = image1.size
-    result_width = width * 2
-    result_height = height
+
+def merge_images(image1, image2):
+    (width1, height1) = image1.size
+    (width2, height2) = image2.size
+
+    result_width = width1 + width2
+    result_height = max(height1, height2)
 
     result = Image.new('RGB', (result_width, result_height))
     result.paste(im=image1, box=(0, 0))
-    result.paste(im=image2, box=(width, 0))
+    result.paste(im=image2, box=(width1, 0))
     return result
+
+
+def add_label(image, label):
+    """
+    :param image: The PIL.Image object to add label text to
+    :param label: A text label
+    :return: the image with the label added to it at the top left
+    """
+    draw = ImageDraw.Draw(image)
+    draw.text(xy=(3, 3), fill=(0, 0, 255), text=label)
+    return image
 
 
 def add_info(image, info):
@@ -76,7 +92,7 @@ def _compare_img(img1, img2):
 
     diff_squares = [(h1[i] - h2[i]) ** 2 for i in xrange(len(h1))]
     rms = math.sqrt(sum(diff_squares) / len(h1))
-    return rms
+    return int(rms)
 
 
 def crop(img_file, cropbox, backup=False):

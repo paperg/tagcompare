@@ -10,11 +10,11 @@ import settings
 import logger
 
 
+MAX_REMOTE_JOBS = 6
 LOGGER = logger.Logger(name="capture", writefile=True).get()
 
 
 def __capture_tags_for_configs(cids, pathbuilder,
-                               comparisons=settings.DEFAULT.comparisons,
                                configs=settings.DEFAULT.configs,
                                tagsizes=settings.DEFAULT.tagsizes,
                                tagtypes=settings.DEFAULT.tagtypes,
@@ -24,15 +24,15 @@ def __capture_tags_for_configs(cids, pathbuilder,
         LOGGER.warn("No tags found to capture!")
         return
 
-    LOGGER.info("Capturing tags for %s campaigns", len(cids))
+    LOGGER.info("Capturing tags for %s campaigns over %s configs", len(cids),
+                len(configs))
+    # TODO: Implement progress bar
     errors = []
-    all_configs = configs
-    config_names = settings.get_unique_configs_from_comparisons(comparisons)
-    pool = ThreadPool(processes=10)
+    pool = ThreadPool(processes=MAX_REMOTE_JOBS)
     results = {}
 
-    for config_name in config_names:
-        config_data = all_configs[config_name]
+    for config_name in configs:
+        config_data = configs[config_name]
         if not config_data['enabled']:
             LOGGER.debug("Skipping disabled config %s" % config_name)
             continue
@@ -113,7 +113,7 @@ def __capture_tags(capabilities, tags, pathbuilder,
         for cid in tags:
             pathbuilder.cid = cid
             tags_per_campaign = tags[cid]
-            LOGGER.debug("tags_per_campaign: %s", str(tags_per_campaign))
+            # LOGGER.debug("tags_per_campaign: %s", str(tags_per_campaign))
             # TODO: Refactor better with __capture_tag
             # It's weird that we pass in a pathbuilder object and do two nested loops here
             for tagsize in tagsizes:
@@ -131,6 +131,7 @@ def __capture_tags(capabilities, tags, pathbuilder,
                     else:
                         browser_errors += r
                         num_captured += 1
+            LOGGER.debug("Captured tags for campaign %s on %s", cid, capabilities)
     except KeyboardInterrupt:
         driver.quit()
         driver = None
