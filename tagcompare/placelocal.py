@@ -14,17 +14,20 @@ PL_DOMAIN = settings.DEFAULT.domain
 LOGGER = logger.Logger(__name__).get()
 
 
-def __get_active_campaigns(pid):
-    url = str.format(
-        "https://{}/api/v2/publication/{}/campaigns?status=active",
-        PL_DOMAIN, pid)
+def __get_route(route, domain=PL_DOMAIN):
+    url = str.format("https://{}/{}", domain, route)
     r = requests.get(url, headers=settings.DEFAULT.get_placelocal_headers())
     if r.status_code != 200:
-        LOGGER.error("getActiveCampaigns error: %s", r.text)
-        return []
+        raise ValueError("GET {} failed with{}".format(route, r.text))
+    if 'data' not in r.text:
+        raise ValueError("Invalid PL response - no data!")
+    return json.loads(r.text)['data']
 
-    data = json.loads(r.text)
-    campaigns = data['data']['campaigns']
+
+def __get_active_campaigns(pid):
+    route = "api/v2/publication/{}/campaigns?status=active".format(pid)
+    data = __get_route(route)
+    campaigns = data['campaigns']
 
     result = []
     for c in campaigns:
@@ -44,24 +47,20 @@ def __get_tags(cid):
     """
     # TODO: Support different protocols
     # protocol = ['http_ad_tags', 'https_ad_tags']
-    url = "https://{}/api/v2/campaign/{}/tags?".format(PL_DOMAIN, cid)
+    route = "api/v2/campaign/{}/tags?".format(cid)
 
     # Animation time is set to 1 to make it static after 1s
     qp = urlencode(
         {"ispreview": 0, "isae": 0, "animationtime": settings.TAG_ANIMATION_TIME,
          "usetagmacros": 0})
-    url += qp
-    r = requests.get(url, headers=settings.DEFAULT.get_placelocal_headers())
-    if r.status_code != 200:
-        LOGGER.error("getTags error: %s", r.text)
-        return None
-
-    tags_data = json.loads(r.text)['data']['http_ad_tags']
-    if not tags_data:
+    route += qp
+    data = __get_route(route)
+    if not data:
         LOGGER.warning("No tags found for cid %s, tags data: %s", cid,
-                       tags_data)
+                       data)
         return None
 
+    tags_data = data['http_ad_tags']
     if not isinstance(tags_data, dict):
         raise ValueError("tag_data is not a dict!:\n %s", tags_data)
     # LOGGER.debug("__get_tags result:\n%s\n\n\n", tags_data)
@@ -96,15 +95,56 @@ def get_tags_for_campaigns(cids):
     return all_tags
 
 
-def get_cids(cids=None, pids=None):
-    # Input is a PID (publisher id) or a list of CIDs (campaign Ids)
-    if not cids:
-        if not pids:
-            raise ValueError("pid must be specified if there are no cids!")
+def _get_pids_from_publisher(pid):
+    if not pid:
+        raise ValueError("Invalid publisher id!")
+    route = "api/v2/publisher/{}/publications".format(pid)
+    data = __get_route(route)
+    if not data:
+        return None
 
+    publications = data['publications']
+    pids = []
+    for p in publications:
+        pids.append(p['id'])
+    return pids
+
+
+def _get_all_pids(pids):
+    """
+    Expand potential super publishers to get publishers from them
+    :param pids:
+    :return:
+    """
+    all_pids = []
+    for pid in pids:
+        newpids = _get_pids_from_publisher(pid)
+        if not newpids:
+            all_pids.append(pid)
+        else:
+            all_pids += newpids
+    result = list(set(all_pids))  # unique list
+    LOGGER.debug("_get_all_pids: %s", result)
+    return result
+
+
+def get_cids(cids=None, pids=None):
+    """
+    Gets a list of campaign ids from a combinination of cids and pids
+    :param cids: campaign ids, directly gets appended to the list of cids
+    :param pids: publisher or superpub ids, this is confusing - I know
+    :return: a list of campaign ids
+    """
+    if not pids:
+        if cids:
+            return cids
+        raise ValueError("pid must be specified if there are no cids!")
+
+    if pids and not cids:
         cids = []
-        for pid in pids:
-            new_cids = __get_active_campaigns(pid)
-            if new_cids:
-                cids += new_cids
+    all_pids = _get_all_pids(pids)
+    for pid in all_pids:
+        new_cids = __get_active_campaigns(pid)
+        if new_cids:
+            cids += new_cids
     return cids

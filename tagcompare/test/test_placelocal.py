@@ -4,7 +4,6 @@ import json
 import pytest
 
 from tagcompare import settings
-
 from tagcompare import placelocal
 
 
@@ -42,18 +41,37 @@ def test_get_tags_for_campaigns():
         assert iframe_tag, "Should have iframe tag!"
 
 
+@pytest.mark.integration
 def test_get_tags_for_campaigns_invalid():
+    cids = [999999]
+    tags = placelocal.get_tags_for_campaigns(cids=cids)
+    assert not tags, "Should not have gotten tags for an invalid cid!"
+
     with pytest.raises(ValueError):
         placelocal.get_tags_for_campaigns(cids=None)
 
 
 @pytest.mark.integration
 def test_get_cids_from_publications():
-    pub = 627
-    cids = placelocal.get_cids(pids=[pub])
-    assert cids, "Did not get any campaigns for publisher {}!".format(pub)
+    pids = [627]
+    cids = placelocal.get_cids(pids=pids)
+    assert cids, "Did not get any campaigns for pids: {}!".format(pids)
     assert len(cids) > 0, "Should have found some active campaigns!"
-    print "Found {} campaigns for publisher {}".format(len(cids), pub)
+    print "Found {} campaigns for publishers: {}".format(len(cids), pids)
+
+
+@pytest.mark.integration
+def test_get_all_pids():
+    pids = [297, 627]
+    all_pids = placelocal._get_all_pids(pids)
+    assert len(all_pids) == 5
+    assert 627 in all_pids
+
+
+@pytest.mark.integration
+def test_get_pids_from_publisher():
+    with pytest.raises(ValueError):
+        placelocal._get_pids_from_publisher(pid=None)
 
 
 def test_get_cids():
