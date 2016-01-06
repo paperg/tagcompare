@@ -23,5 +23,6 @@
   "saucelabs": {
     "user": "TEST_USER",
     "key": "TEST_KEY"
-  }
+  },
+  "comparisons": [ "latest" ]
 }

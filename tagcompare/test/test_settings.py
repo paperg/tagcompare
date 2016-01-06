@@ -43,7 +43,7 @@ def test_logdir():
 
 def test_invalid_configfile():
     s = settings.Settings(configfile='invalid/path')
-    configs = s.configs
+    configs = s.all_configs
     assert configs, "Should have gotten default configs!"
 
 
@@ -106,7 +106,7 @@ def test_get_placelocal_headers():
 
 
 def test_configs():
-    t = SETTINGS.configs
+    t = SETTINGS.all_configs
     assert t, "configs undefined or have no values!"
 
 
@@ -115,10 +115,15 @@ def test_comparisons():
     assert t, "comparisons undefined or have no values!"
 
 
+def test_all_comparisons():
+    t = SETTINGS.all_comparisons
+    assert t, "all_comparisons undefined or have no values!"
+
+
 def test_comparisons_matches_configs():
-    configs = SETTINGS.configs
+    configs = SETTINGS.all_configs
 
     # Check that all the unique values in comparisons are specified in configs
-    unique_configs = SETTINGS.configs_in_comparison()
+    unique_configs = SETTINGS.configs_in_comparisons()
     for c in unique_configs:
         assert c in configs

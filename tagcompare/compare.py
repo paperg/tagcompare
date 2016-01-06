@@ -107,13 +107,13 @@ def _compare_configs_internal(pathbuilder, configs):
 
 def compare(pb, cids=None, sizes=settings.DEFAULT.tagsizes,
             types=settings.DEFAULT.tagtypes,
-            comparison="latest",
+            comparison="latest",    # TODO: Don't hardcode
             configs=None):
     if not cids:
         cids = placelocal.get_cids(cids=settings.DEFAULT.campaigns,
                                    pids=settings.DEFAULT.publishers)
     if not configs:
-        configs = settings.DEFAULT.comparisons[comparison]
+        configs = settings.DEFAULT.all_comparisons[comparison]
 
     pool = ThreadPool(processes=NUM_COMPARE_PROCESSES)
     compare_threads = []

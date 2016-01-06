@@ -14,11 +14,6 @@ SETTINGS = settings.Settings(configfile='test/assets/test_settings.json',
 
 @pytest.mark.integration
 def test_capture_configs():
-    """
-    def __capture_tags_for_configs(cids, pathbuilder, configs=settings.DEFAULT.configs,
-                                   comparisons=settings.DEFAULT.comparisons):
-    :return:
-    """
     cids = [477944]
     configs = {
         "chrome": {

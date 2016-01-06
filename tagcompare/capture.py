@@ -15,7 +15,7 @@ LOGGER = logger.Logger(name="capture", writefile=True).get()
 
 
 def __capture_tags_for_configs(cids, pathbuilder,
-                               configs=settings.DEFAULT.configs,
+                               configs,
                                tagsizes=settings.DEFAULT.tagsizes,
                                tagtypes=settings.DEFAULT.tagtypes,
                                capture_existing=False):
@@ -31,8 +31,9 @@ def __capture_tags_for_configs(cids, pathbuilder,
     pool = ThreadPool(processes=MAX_REMOTE_JOBS)
     results = {}
 
+    all_configs = settings.DEFAULT.all_configs
     for config_name in configs:
-        config_data = configs[config_name]
+        config_data = all_configs[config_name]
         if not config_data['enabled']:
             LOGGER.debug("Skipping disabled config %s" % config_name)
             continue
@@ -117,6 +118,10 @@ def __capture_tags(capabilities, tags, pathbuilder,
             # TODO: Refactor better with __capture_tag
             # It's weird that we pass in a pathbuilder object and do two nested loops here
             for tagsize in tagsizes:
+                if tagsize not in tags_per_campaign:
+                    LOGGER.warn("No tagsize '%s' found for campaign: %s. Skipping",
+                                tagsize, cid)
+                    continue
                 pathbuilder.tagsize = tagsize
                 for tagtype in tagtypes:
                     pathbuilder.tagtype = tagtype
@@ -156,7 +161,9 @@ def main(cids=settings.DEFAULT.campaigns, pids=settings.DEFAULT.publishers):
     pathbuilder = output.create(build=build)
     cids = placelocal.get_cids(cids=cids, pids=pids)
     output.aggregate()
-    __capture_tags_for_configs(cids=cids, pathbuilder=pathbuilder)
+
+    configs = settings.DEFAULT.configs_in_comparisons()
+    __capture_tags_for_configs(cids=cids, pathbuilder=pathbuilder, configs=configs)
     return original_build
 
 
