@@ -48,10 +48,10 @@ TAG_ANIMATION_TIME = 1
 """ Helper methods """
 
 
-def get_unique_configs_from_comparisons(comparisons):
+def _get_unique_configs_from_comparisons(comparisons, all_comparisons):
     tmpset = {}
     for comp in comparisons:
-        complist = comparisons[comp]
+        complist = all_comparisons[comp]
         tmpset = set(tmpset).union(set(complist))
 
     unique_configs = list(tmpset)
@@ -155,18 +155,23 @@ class Settings():
         return self.__compare_set
 
     @property
-    def comparisons(self):
+    def all_comparisons(self):
         return self._compare_set['comparisons']
 
     @property
-    def configs(self):
+    def all_configs(self):
         return self._compare_set['configs']
 
-    def configs_in_comparison(self):
+    @property
+    def comparisons(self):
+        return self._settings['comparisons']
+
+    def configs_in_comparisons(self):
         """Gets a list of unique configs from the comparisons matrix
         :return:
         """
-        return get_unique_configs_from_comparisons(self.comparisons)
+        return _get_unique_configs_from_comparisons(self.comparisons,
+                                                    self.all_comparisons)
 
     def get_saucelabs_user(self, env=Env.SAUCE_USER):
         value = os.environ.get(env)
@@ -194,7 +199,6 @@ class Settings():
         headers = self._placelocal['secret']
         logging.debug("get_placelocal_headers: %s", headers)
         return headers
-
 
 # TODO: not sure if this is proper...
 DEFAULT = Settings()
