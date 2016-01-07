@@ -4,7 +4,7 @@ import compare
 
 def main():
     jobname = capture.main()
-    compare.main(jobname=jobname)
+    compare.main(build=jobname)
 
 
 if __name__ == '__main__':

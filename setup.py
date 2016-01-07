@@ -1,6 +1,7 @@
+import sys
+
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
-import sys
 
 
 class Tox(TestCommand):
@@ -19,6 +20,7 @@ class Tox(TestCommand):
         # import here, cause outside the eggs aren't loaded
         import tox
         import shlex
+
         args = self.tox_args
         if args:
             args = shlex.split(self.tox_args)
@@ -28,9 +30,16 @@ class Tox(TestCommand):
 
 setup(
     name='tagcompare',
+    version='0.1.1',
     description='Capture and compare creative tags!',
     url='https://github.com/paperg/tagcompare',
     packages=['tagcompare', 'tagcompare.test'],
+    entry_points={
+        'console_scripts': [
+            'tagcapture = tagcompare.capture:main',
+            'tagcompare = tagcompare.main:main',
+        ]
+    },
     install_requires=[
         'selenium',
         'requests',
@@ -41,5 +50,5 @@ setup(
         '': ['*.json'],
     },
     tests_require=['tox'],
-    cmdclass={'test': Tox},
+    cmdclass={'test': Tox}
 )
