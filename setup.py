@@ -1,4 +1,5 @@
 import sys
+import subprocess
 
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
@@ -28,9 +29,20 @@ class Tox(TestCommand):
         sys.exit(errno)
 
 
+def git_version():
+    try:
+        version = subprocess.check_output(
+            'git describe --always --dirty'.split()
+        ).strip().decode()
+    except subprocess.CalledProcessError:
+        version = '0.0.0'
+
+    return version
+
+
 setup(
     name='tagcompare',
-    version='0.1.1',
+    version=git_version(),
     description='Capture and compare creative tags!',
     url='https://github.com/paperg/tagcompare',
     packages=['tagcompare', 'tagcompare.test'],
@@ -44,7 +56,8 @@ setup(
         'selenium',
         'requests',
         'pillow',
-        'enum34'
+        'enum34',
+        'coveralls'
     ],
     package_data={
         '': ['*.json'],

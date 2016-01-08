@@ -10,11 +10,13 @@ import logger
 
 
 TIMESTAMP = time.strftime("%Y%m%d-%H%M%S")
-PL_DOMAIN = settings.DEFAULT.domain
 LOGGER = logger.Logger(__name__).get()
 
 
-def __get_route(route, domain=PL_DOMAIN):
+def __get_route(route, domain=None):
+    if not domain:
+        domain = settings.DEFAULT.domain
+
     url = str.format("https://{}/{}", domain, route)
     r = requests.get(url, headers=settings.DEFAULT.get_placelocal_headers())
     if r.status_code != 200:
@@ -61,9 +63,6 @@ def __get_tags(cid):
         return None
 
     tags_data = data['http_ad_tags']
-    if not isinstance(tags_data, dict):
-        raise ValueError("tag_data is not a dict!:\n %s", tags_data)
-    # LOGGER.debug("__get_tags result:\n%s\n\n\n", tags_data)
     return tags_data
 
 
@@ -76,8 +75,8 @@ def get_tags_for_campaigns(cids):
     """
     if not cids:
         raise ValueError("cids not defined!")
-    LOGGER.info(
-        "get tags for %s campaigns: %s...", len(cids), cids)
+    LOGGER.debug(
+        "Get tags for %s campaigns: %s...", len(cids), cids)
 
     tp = ThreadPool(processes=10)
     results = {}
@@ -128,20 +127,26 @@ def _get_all_pids(pids):
     return result
 
 
-def get_cids(cids=None, pids=None):
+def get_cids_from_settings(settings_obj=settings.DEFAULT):
+    cids = settings_obj.campaigns
+    pids = settings_obj.publishers
+    return _get_cids(cids, pids)
+
+
+def _get_cids(cids=None, pids=None):
     """
     Gets a list of campaign ids from a combinination of cids and pids
     :param cids: campaign ids, directly gets appended to the list of cids
     :param pids: publisher or superpub ids, this is confusing - I know
     :return: a list of campaign ids
     """
-    if not pids:
-        if cids:
-            return cids
-        raise ValueError("pid must be specified if there are no cids!")
+    if cids:
+        return cids
 
-    if pids and not cids:
-        cids = []
+    if not pids:
+        raise ValueError("pids must be specified if there are no cids!")
+
+    cids = []
     all_pids = _get_all_pids(pids)
     for pid in all_pids:
         new_cids = __get_active_campaigns(pid)

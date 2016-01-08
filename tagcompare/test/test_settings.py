@@ -1,14 +1,63 @@
-import tempfile
 import os
+import logging
 
 from tagcompare import settings
-
 
 settings.TEST_MODE = True
 TEST_COMPARE_FILE = 'test/assets/test_compare.json'
 TEST_SETTINGS_FILE = 'test/assets/test_settings.json'
-SETTINGS = settings.Settings(configfile=TEST_SETTINGS_FILE,
-                             comparefile=TEST_COMPARE_FILE)
+TEST_LOGS_DIR = 'test/assets/logs/'
+
+
+def createSettings(configfile=TEST_SETTINGS_FILE,
+                   comparefile=TEST_COMPARE_FILE,
+                   logdir=TEST_LOGS_DIR, validate=False):
+    test_settings = settings.Settings(configfile, comparefile, logdir)
+
+    if validate:
+        assert configfile in test_settings._configfile
+        assert test_settings._comparefile == comparefile
+        assert logdir in test_settings.logdir
+    return test_settings
+
+
+SETTINGS = createSettings(validate=True)
+
+
+def test_domain():
+    domain_settings = createSettings()
+    assert domain_settings.domain == "www.placelocal.com", \
+        "Default domain is not correct!"
+    expected_domain = "www.example.com"
+    domain_settings.domain = expected_domain
+    assert domain_settings.domain == expected_domain, "domain was not set correctly!"
+
+
+def test_campaigns():
+    test_settings = createSettings()
+    assert test_settings.campaigns == [131313], \
+        "Default campaigns is not correct!"
+    expected = [999999]
+    test_settings.campaigns = expected
+    assert test_settings.campaigns == expected, "campaigns was not set correctly!"
+
+
+def test_publishers():
+    test_settings = createSettings()
+    assert test_settings.publishers == [627], \
+        "Default publishers is not correct!"
+    expected = [444]
+    test_settings.publishers = expected
+    assert test_settings.publishers == expected, "publishers was not set correctly!"
+
+
+def test_loglevel():
+    test_settings = createSettings()
+    assert test_settings.loglevel == logging.INFO, \
+        "Default loglevel is not correct!"
+    expected = logging.DEBUG
+    test_settings.loglevel = expected
+    assert test_settings.loglevel == expected, "loglevel was not set correctly!"
 
 
 def test_config():
@@ -17,43 +66,35 @@ def test_config():
     assert t, "no settings object!"
 
 
-def test_domain():
-    t = SETTINGS.domain
-    assert t, "domain undefined!"
-
-
-def __test_logdir(logdir):
+def __test_logdir(logdir, expected):
     assert logdir, "Could not get logdir!"
-    assert os.path.exists(logdir), "logdir was not created on init!"
+    assert expected in logdir, "logdir value is not expected!"
+    assert os.path.exists(logdir), "logdir does not exist!"
 
 
 def test_logdir():
-    tmpdir = tempfile.gettempdir()
-    s = settings.Settings(configfile=TEST_SETTINGS_FILE,
-                          comparefile=TEST_COMPARE_FILE,
-                          logdir=tmpdir)
-    __test_logdir(s.logdir)
-    newdir = "new_logdir"
-    s = settings.Settings(configfile=TEST_SETTINGS_FILE,
-                          comparefile=TEST_COMPARE_FILE,
-                          logdir=newdir)
-    __test_logdir(s.logdir)
+    tmpdir = "new_logs_dir"
+    s = createSettings(configfile=TEST_SETTINGS_FILE,
+                       comparefile=TEST_COMPARE_FILE,
+                       logdir=tmpdir)
+    __test_logdir(s.logdir, tmpdir)
     os.rmdir(s.logdir)
 
 
 def test_invalid_configfile():
-    s = settings.Settings(configfile='invalid/path')
+    s = createSettings(configfile='invalid/path', validate=False)
     configs = s.all_configs
     assert configs, "Should have gotten default configs!"
 
 
 def test_tagsizes():
-    tag_settings = SETTINGS.tag
+    test_tag_settings = createSettings()
+    tag_settings = test_tag_settings.tag
     assert tag_settings, "Could not get tag settings!"
     all_sizes = tag_settings['sizes']
     assert all_sizes, "Could not get sizes from tag settings!"
     assert len(all_sizes) == 4, "There should be exactly 4 supported sizes!"
-    enabled_sizes = SETTINGS.tagsizes
+    enabled_sizes = test_tag_settings.tagsizes
     assert enabled_sizes, "Could not get enabled_sizes from tag settings"
     assert "medium_rectangle" in enabled_sizes, "medium_rectangle should be enabled!"
     assert "skyscraper" not in enabled_sizes, "skyscraper should not be enabled!"
@@ -71,11 +112,12 @@ def test_tagtypes():
 
 
 def test_saucelabs():
-    sauce_settings = SETTINGS._saucelabs
+    new_settings = createSettings()
+    sauce_settings = new_settings._saucelabs
     assert sauce_settings, "Could not get saucelabs settings!"
-    user = SETTINGS.get_saucelabs_user(env=None)
+    user = new_settings.get_saucelabs_user(env=None)
     assert user == "TEST_USER", "Did not read sauce user from JSON!"
-    key = SETTINGS.get_saucelabs_key(env=None)
+    key = new_settings.get_saucelabs_key(env=None)
     assert key == "TEST_KEY", "Did not read sauce key from JSON!"
 
     # test env override (default behavior) if env vars are set

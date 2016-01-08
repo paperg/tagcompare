@@ -4,6 +4,8 @@ import logging
 
 from enum import IntEnum
 
+import logger
+
 
 MODULE_NAME = "tagcompare"
 DEFAULT_FILENAME = "settings.json"
@@ -12,10 +14,9 @@ DEFAULT_COMPARE_FILENAME = "compare.json"
 
 HOME_DIR = os.path.expanduser("~")
 OUTPUT_DIR = os.path.join(HOME_DIR, MODULE_NAME)
-LOG_LEVEL = logging.INFO
 
 
-class Test:
+class Test(object):
     TEST_DIR = os.path.abspath(os.path.join(
         os.path.dirname(__file__), "test"))
     TEST_ASSETS_DIR = os.path.join(TEST_DIR, "assets")
@@ -29,7 +30,7 @@ class ImageErrorLevel(IntEnum):
     SEVERE = 500
 
 
-class Env:
+class Env(object):
     SAUCE_USER = "SAUCE_USER"
     SAUCE_KEY = "SAUCE_KEY"
     PL_SECRET = "PL_SECRET"
@@ -72,13 +73,14 @@ def _load_json_file(relpath):
     return json.load(open(_get_abs_path(relpath), "r"))
 
 
-class Settings():
+class Settings(object):
     """The configuration class for tagcompare.
     reads settings.py and provides setting values to consumers
     """
 
     def __init__(self, configfile=DEFAULT_LOCAL_FILENAME,
-                 comparefile=DEFAULT_COMPARE_FILENAME, logdir=OUTPUT_DIR):
+                 comparefile=DEFAULT_COMPARE_FILENAME,
+                 logdir=OUTPUT_DIR):
         configfile_path = _get_abs_path(configfile)
 
         self.__logdir = _get_abs_path(logdir)
@@ -95,6 +97,27 @@ class Settings():
         self.__settings = None
         self.__comparefile = comparefile
         self.__compare_set = None
+        self.__campaigns = None
+        self.__publishers = None
+        self.__domain = None
+        self.__loglevel = logging.INFO
+
+    @property
+    def loglevel(self):
+        return self.__loglevel
+
+    @loglevel.setter
+    def loglevel(self, value):
+        self.__loglevel = value
+        logger.set_level_from_settings()
+
+    @property
+    def _comparefile(self):
+        return self.__comparefile
+
+    @property
+    def _configfile(self):
+        return self.__configfile
 
     @property
     def logdir(self):
@@ -113,11 +136,17 @@ class Settings():
 
     @property
     def domain(self):
-        return self._placelocal['domain']
+        if not self.__domain:
+            self.__domain = self._placelocal['domain']
+        return self.__domain
+
+    @domain.setter
+    def domain(self, value):
+        self.__domain = value
 
     @property
     def tag(self):
-        return self.__settings['tag']
+        return self._settings['tag']
 
     @property
     def tagsizes(self):
@@ -129,11 +158,23 @@ class Settings():
 
     @property
     def campaigns(self):
-        return self._settings['campaigns']
+        if not self.__campaigns and not self.__publishers:
+            self.__campaigns = self._settings['campaigns']
+        return self.__campaigns
+
+    @campaigns.setter
+    def campaigns(self, value):
+        self.__campaigns = value
 
     @property
     def publishers(self):
-        return self._settings['publishers']
+        if not self.__publishers and not self.__campaigns:
+            self.__publishers = self._settings['publishers']
+        return self.__publishers
+
+    @publishers.setter
+    def publishers(self, value):
+        self.__publishers = value
 
     @property
     def _saucelabs(self):
@@ -200,5 +241,5 @@ class Settings():
         logging.debug("get_placelocal_headers: %s", headers)
         return headers
 
-# TODO: not sure if this is proper...
+
 DEFAULT = Settings()
