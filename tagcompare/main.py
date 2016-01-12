@@ -6,6 +6,7 @@ import capture
 import compare
 import settings
 import logger
+import setup
 
 
 LOGGER = logger.Logger(name="main", writefile=True).get()
@@ -93,6 +94,7 @@ def main():
 
     if args.version:
         # This gets handled by setup.py, we just need to not run the main routine
+        setup.git_version()
         exit(0)
 
     __update_settings_from_args(args)

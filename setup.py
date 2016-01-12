@@ -32,8 +32,8 @@ class Tox(TestCommand):
 def git_version():
     try:
         version = subprocess.check_output(
-            'git describe --always --dirty'.split()
-        ).strip().decode()
+            'git describe --dirty --always'.split()
+        ).replace('-dirty', '.dev0').strip().decode()
     except subprocess.CalledProcessError:
         version = '0.0.0'
 
