@@ -13,7 +13,7 @@ LOGGER = logger.Logger("compare", writefile=True).get()
 NUM_COMPARE_PROCESSES = 8
 
 
-class CompareResult:
+class CompareResult(object):
     def __init__(self):
         self.result = {
             settings.ImageErrorLevel.INVALID: 0,
@@ -105,13 +105,10 @@ def _compare_configs_internal(pathbuilder, configs):
     return total_diff / combo_count
 
 
-def compare(pb, cids=None, sizes=settings.DEFAULT.tagsizes,
+def compare(pb, cids, sizes=settings.DEFAULT.tagsizes,
             types=settings.DEFAULT.tagtypes,
-            comparison="latest",    # TODO: Don't hardcode
+            comparison="latest",  # TODO: Don't hardcode
             configs=None):
-    if not cids:
-        cids = placelocal.get_cids(cids=settings.DEFAULT.campaigns,
-                                   pids=settings.DEFAULT.publishers)
     if not configs:
         configs = settings.DEFAULT.all_comparisons[comparison]
 
@@ -153,13 +150,17 @@ def __handle_output(pathbuilder, result_image, diff, prefix=""):
 
 
 def main(build=None):
+    LOGGER.info("Starting compare for cid=%s, pids=%s...",
+                settings.DEFAULT.campaigns, settings.DEFAULT.publishers)
     output.aggregate()
 
     if not build:
         build = output.generate_build_string()
     jobname = "compare_" + build
     pb = output.create(build=jobname)
-    compare(pb)
+
+    cids = placelocal.get_cids_from_settings()
+    compare(pb, cids=cids)
     return pb
 
 

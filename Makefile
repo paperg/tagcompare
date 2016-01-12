@@ -1,5 +1,5 @@
 install:
-	pip install -r requirements.txt -q
+	pip install -e .
 
 .PHONY: flake
 flake: install

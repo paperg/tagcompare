@@ -54,7 +54,7 @@ def test_get_tags_for_campaigns_invalid():
 @pytest.mark.integration
 def test_get_cids_from_publications():
     pids = [627]
-    cids = placelocal.get_cids(pids=pids)
+    cids = placelocal._get_cids(pids=pids)
     assert cids, "Did not get any campaigns for pids: {}!".format(pids)
     assert len(cids) > 0, "Should have found some active campaigns!"
     print "Found {} campaigns for publishers: {}".format(len(cids), pids)
@@ -75,11 +75,19 @@ def test_get_pids_from_publisher():
 
 
 def test_get_cids():
-    cids = placelocal.get_cids(cids=[1, 2, 3])
+    cids = placelocal._get_cids(cids=[1, 2, 3])
     assert cids, "Could not get cids!"
     assert len(cids) == 3, "There should be exactly 3 cids!"
 
 
+def test_get_cids_from_settings():
+    settings_obj = settings.Settings(configfile='test/assets/test_settings.json',
+                                     comparefile='test/assets/test_compare.json',
+                                     logdir='test/assets/output/')
+    cids = placelocal.get_cids_from_settings(settings_obj)
+    assert 131313 in cids
+
+
 def test_get_cids_invalid():
     with pytest.raises(ValueError):
-        placelocal.get_cids()
+        placelocal._get_cids()

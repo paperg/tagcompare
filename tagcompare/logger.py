@@ -4,6 +4,10 @@ import logging
 import settings
 
 
+def set_level_from_settings():
+    logging.getLogger("tagcompare").setLevel(settings.DEFAULT.loglevel)
+
+
 class Logger(object):
     def __init__(self, name, directory=None, writefile=False):
         if directory and not writefile:
@@ -22,7 +26,7 @@ class Logger(object):
         logger = logging.getLogger('tagcompare.%s' % name)
 
         # Set default log levels
-        logging.getLogger("tagcompare").setLevel(logging.DEBUG)
+        logging.getLogger("tagcompare").setLevel(settings.DEFAULT.loglevel)
         if not logger.handlers:
             if writefile:
                 logger.addHandler(self.__file_handler())
@@ -52,7 +56,7 @@ class Logger(object):
         handler = logging.StreamHandler()
         formatter = logging.Formatter('%(levelname)s: %(message)s')
         handler.setFormatter(formatter)
-        handler.setLevel(settings.LOG_LEVEL)
+        handler.setLevel(settings.DEFAULT.loglevel)
         return handler
 
     def get(self):
