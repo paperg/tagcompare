@@ -40,28 +40,29 @@ def git_version():
     return version
 
 
-setup(
-    name='tagcompare',
-    version=git_version(),
-    description='Capture and compare creative tags!',
-    url='https://github.com/paperg/tagcompare',
-    packages=['tagcompare', 'tagcompare.test'],
-    entry_points={
-        'console_scripts': [
-            'tagcapture = tagcompare.capture:main',
-            'tagcompare = tagcompare.main:main',
-        ]
-    },
-    install_requires=[
-        'selenium',
-        'requests',
-        'pillow',
-        'enum34',
-        'coveralls'
-    ],
-    package_data={
-        '': ['*.json'],
-    },
-    tests_require=['tox'],
-    cmdclass={'test': Tox}
-)
+if __name__ == '__main__':
+    setup(
+        name='tagcompare',
+        version=git_version(),
+        description='Capture and compare creative tags!',
+        url='https://github.com/paperg/tagcompare',
+        packages=['tagcompare', 'tagcompare.test'],
+        entry_points={
+            'console_scripts': [
+                'tagcapture = tagcompare.capture:main',
+                'tagcompare = tagcompare.main:main',
+            ]
+        },
+        install_requires=[
+            'selenium',
+            'requests',
+            'pillow',
+            'enum34',
+            'coveralls'
+        ],
+        package_data={
+            '': ['*.json'],
+        },
+        tests_require=['tox'],
+        cmdclass={'test': Tox}
+    )
