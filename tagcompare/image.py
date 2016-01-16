@@ -21,30 +21,6 @@ def compare(file1, file2):
     return result
 
 
-def merge_image_files(file1, file2, label1=None, label2=None):
-    """Merge two images into one, displayed side by side
-    :param file1:
-    :param file2:
-    :return:
-    """
-    image1 = normalize_img(file1)
-    image2 = normalize_img(file2)
-    return merge_images(image1, image2)
-
-
-def merge_images(image1, image2):
-    (width1, height1) = image1.size
-    (width2, height2) = image2.size
-
-    result_width = width1 + width2
-    result_height = max(height1, height2)
-
-    result = Image.new('RGB', (result_width, result_height))
-    result.paste(im=image1, box=(0, 0))
-    result.paste(im=image2, box=(width1, 0))
-    return result
-
-
 def add_label(image, label):
     """
     :param image: The PIL.Image object to add label text to
@@ -116,3 +92,70 @@ def normalize_img(img_file, greyscale=False):
     # TODO: Figure out ways to make font issues more prominent
     # greyscale
     return img.convert('LA')
+
+
+def blank_compare_matrix(num_configs, width, height):
+    return Image.new("RGBA", (num_configs*width, num_configs*height), (0, 0, 0, 0))
+
+
+def get_overlay_mask(width, height, alpha):
+    return Image.new("L", (width, height), alpha)
+
+
+def draw_reference_copy(canvas, srcimg, position):
+    canvas.paste(srcimg, box=position)
+
+
+def _get_color_distance(px1, px2):
+    # Using L2 distance on RGB space as rough approximation of "color distance"
+    # Works with any length pixel as long as px1 and px2 are same tuple format.
+    # Don't have to normalize the result because there has to be a normalization
+    # pass at the end anyway.
+    return math.sqrt(sum([abs(a-b)**2 for (a, b) in zip(px1, px2)]))
+
+
+# In R8G8B8A8 space, this is white vs. black, so all distances must be at most this.
+_DIST_MAX = 2*256
+
+
+def draw_visual_diff(canvas, img1, img2, position, cfgstring, overlay_mask):
+    # Algorithm computes "color distance" between matching pixels, then normalizes the
+    # output. This makes the "diff operator" commutative, but we want to overlay the
+    # "diff" against img1 so that you can see semantically what part of the image was
+    # different.
+    min_dist = _DIST_MAX
+    max_dist = 0.0
+    distances = Image.new("F", img1.size, 0.0)
+    for y in range(img1.height):
+        for x in range(img1.width):
+            pixel = (x, y)
+            color_distance = _get_color_distance(img1.getpixel(pixel),
+                                                 img2.getpixel(pixel))
+            distances.putpixel(pixel, color_distance)
+            min_dist = min(min_dist, color_distance)
+            max_dist = max(max_dist, color_distance)
+
+    # Now normalize the distances and label it. 1.0 choice is arbitrary.
+    dist_multiplier = 1.0
+    # Avoids a divide by 0. If the distance on a 3-channel image with 255 pixels
+    # is less than one tenth of a color step, then they're effectively identical images,
+    # so there's no point in normalizing.
+    if (max_dist - min_dist > 0.1):
+        dist_multiplier = 255.0/(max_dist-min_dist)
+    # Only need luminance channel since it's a 1-d distance metric.
+    normalized_distances = Image.new("L", img1.size, 0)
+    for y in range(img1.height):
+        for x in range(img1.width):
+            pixel = (x, y)
+            # Safe to cast to int because dist_multiplier * (pixel - pixel_min) should
+            # never exceed 255, and it's 256 we're worried about.
+            normalized_dist = int(dist_multiplier * (distances.getpixel(pixel)-min_dist))
+            normalized_distances.putpixel(pixel, normalized_dist)
+
+    # Draw base image, then draw diff on top.
+    draw_reference_copy(canvas=canvas, srcimg=img1, position=position)
+    # and then paint the "difference magnitudes"
+    canvas.paste(normalized_distances, position, overlay_mask)
+    # and finally label what the comparison is for.
+    draw = ImageDraw.Draw(canvas)
+    draw.text(xy=(position[0]+3, position[1]+3), fill=(0, 0, 255), text=cfgstring)

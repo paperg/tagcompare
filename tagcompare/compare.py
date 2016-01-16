@@ -52,18 +52,60 @@ def __write_result_image(pathbuilder, result_image,
     result_image.save(open(filename, 'wb'))
 
 
-def _merge_images(pathbuilder, configs):
-    merged_image = None
+def _get_compare_matrix(pathbuilder, configs):
+    compare_image = None
     compare_pb = pathbuilder.clone(build=output.DEFAULT_BUILD_NAME)
-    for c in configs:
-        pb = compare_pb.clone(config=c)
-        tagimage = image.normalize_img(pb.tagimage)
-        image.add_label(image=tagimage, label=c)
-        if not merged_image:
-            merged_image = tagimage
+
+    # Assumes all compared images will have the same dimensions, also that there is at
+    # least one config.
+    if len(configs) <= 0:
+        LOGGER.error("Cannot build comparison matrix, no configs.")
+        return None
+
+    test_image = image.normalize_img(compare_pb.clone(config=configs[0]).tagimage)
+    single_image_width = test_image.width
+    single_image_height = test_image.height
+    num_configs = len(configs)
+
+    # Small optimization: we will reuse each image n times, so loading in advance
+    # reduces number of loads to n from n^2.
+    images_by_config = {}
+    for cfg in configs:
+        images_by_config[cfg] = image.normalize_img(compare_pb.clone(config=cfg).tagimage)
+
+    # 2x2 comparison matrix, so it'll be kinda big.
+    compare_image = image.blank_compare_matrix(num_configs, single_image_width,
+                                               single_image_height)
+
+    # 200 out of 255 for "approximately 80% opaque"
+    difference_overlay_mask = image.get_overlay_mask(single_image_width,
+                                                     single_image_height,
+                                                     200)
+
+    for a, b in itertools.combinations_with_replacement(range(len(configs)), 2):
+        a_cfg = configs[a]
+        b_cfg = configs[b]
+
+        draw_position = (a*single_image_width, b*single_image_height)
+
+        if a == b:
+            # Special case, we know they'll be same image, so just render the image.
+            tagimage = image.normalize_img(compare_pb.clone(config=a_cfg).tagimage)
+            image.add_label(image=tagimage, label=a_cfg)
+            # Use 4-tuple for "draw_position"? Shouldn't be necessary since width and
+            # height are invariant.
+            image.draw_reference_copy(canvas=compare_image, srcimg=tagimage,
+                                      position=draw_position)
         else:
-            merged_image = image.merge_images(merged_image, tagimage)
-    return merged_image
+            # Normal case, so we do a "comparison"
+            a_img = images_by_config[a_cfg]
+            b_img = images_by_config[b_cfg]
+            cfgstring = a_cfg + " x " + b_cfg
+            image.draw_visual_diff(canvas=compare_image, img1=a_img, img2=b_img,
+                                   position=draw_position, cfgstring=cfgstring,
+                                   overlay_mask=difference_overlay_mask)
+
+    return compare_image
 
 
 def _compare_configs(pathbuilder, configs, comparison, result):
@@ -72,7 +114,8 @@ def _compare_configs(pathbuilder, configs, comparison, result):
         result.increment(key=diff)
         return False
 
-    result_image = _merge_images(pathbuilder=pathbuilder, configs=configs)
+    result_image = _get_compare_matrix(pathbuilder=pathbuilder, configs=configs)
+
     prefix_label = comparison + "_"
     r = __handle_output(pathbuilder=pathbuilder, result_image=result_image,
                         diff=diff, prefix=prefix_label)
