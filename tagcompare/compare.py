@@ -164,6 +164,8 @@ def do_all_comparisons(cids=settings.DEFAULT.campaigns,
                 total_skipped)
     LOGGER.info("See additional logs at: %s", pathbuilder.buildpath)
 
+    return True
+
 
 def main(build=None):
     output.aggregate()

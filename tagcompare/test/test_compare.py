@@ -39,6 +39,7 @@ def test_compare_configs():
     __test_compare_configs(pb, configs=["chrome", "firefox"],
                            expected_errors=3, expected_total=4,
                            expected_skips=0)
+    __test_do_all_comparisons(cid, [], pb)
     # TODO: On test fail - the aggregate path stays
     shutil.rmtree(aggregate_path)
 
@@ -54,3 +55,9 @@ def __test_compare_configs(pb, configs, expected_errors, expected_total,
         "Compare test configs: %s - Should be 4 compares!" % configs
     assert skips == expected_skips, \
         "Compare test configs: %s - Should be 0 skips!" % configs
+
+
+
+def __test_do_all_comparisons(cids, pubs, pb):
+    compare.do_all_comparisons(cids, pubs, pb)
+
