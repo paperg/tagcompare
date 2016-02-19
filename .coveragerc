@@ -1,5 +1,5 @@
 [run]
-omit = tagcompare/test/*,tagcompare/main.py
+omit = tagcompare/test/*,tagcompare/main.py,tagtester/*
 
 [report]
 exclude_lines =

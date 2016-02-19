@@ -1,7 +1,6 @@
 import time
 
 from selenium.common.exceptions import WebDriverException
-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -18,6 +17,20 @@ def setup_webdriver(capabilities):
     driver = __setup_remote_webdriver(capabilities=capabilities)
     driver.implicitly_wait(20)
     return driver
+
+
+def get_capabilities_for_config(config_name, build, max_duration=3600,
+                                all_configs=None):
+    if not all_configs:
+        all_configs = settings.DEFAULT.all_configs
+    assert config_name in all_configs, 'configname not in all_configs!'
+    config_data = all_configs[config_name]
+    assert config_data['enabled'], 'config not enabled!'
+    capabilities = config_data['capabilities']
+    capabilities['name'] = config_name
+    capabilities['build'] = build
+    capabilities['maxDuration'] = max_duration
+    return capabilities
 
 
 def __setup_remote_webdriver(capabilities):

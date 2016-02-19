@@ -31,19 +31,13 @@ def __capture_tags_for_configs(cids, pathbuilder,
     pool = ThreadPool(processes=MAX_REMOTE_JOBS)
     results = {}
 
-    all_configs = settings.DEFAULT.all_configs
     for config_name in configs:
-        config_data = all_configs[config_name]
-        if not config_data['enabled']:
-            LOGGER.debug("Skipping disabled config %s" % config_name)
-            continue
+        capabilities = webdriver.get_capabilities_for_config(
+            config_name=config_name,
+            build='tagcompare_' + pathbuilder.build,
+            max_duration=3 * 60 * 60)
 
         pathbuilder.config = config_name
-        capabilities = config_data['capabilities']
-        capabilities['name'] = config_name
-        capabilities['build'] = "tagcompare_" + pathbuilder.build
-        capabilities['maxDuration'] = 3 * 60 * 60  # 3h max duration
-
         cpb = pathbuilder.clone()
         results[config_name] = pool.apply_async(func=__capture_tags,
                                                 args=(capabilities, all_tags, cpb,
@@ -68,6 +62,25 @@ def __write_html(tag_html, output_path):
         f.write(tag_html)
 
 
+def capture_tag(driver, tag_html, output_path, tagtype='iframe'):
+    """
+    Generic/public method to capture a tag
+    :param driver:
+    :param tag_html:
+    :param output_path:
+    :param tagtype:
+    :return:
+    """
+    try:
+        errors = webdriver.display_tag(driver, tag_html)
+        tag_element = driver.find_element_by_tag_name(tagtype)
+        webdriver.screenshot_element(driver, tag_element, output_path)
+    except selenium.common.exceptions.WebDriverException:
+        LOGGER.exception("Exception while capturing tags!")
+        return False
+    return errors
+
+
 def __capture_tag(pathbuilder, tags_per_campaign, driver,
                   capture_existing=False):
     """
@@ -86,17 +99,11 @@ def __capture_tag(pathbuilder, tags_per_campaign, driver,
         LOGGER.debug("Skipping existing captures %s", default_pb.path)
         return None
 
-    try:
-        tag_html = tags_per_campaign[pathbuilder.tagsize][pathbuilder.tagtype]
-        errors = webdriver.display_tag(driver, tag_html)
-        # Getting ready to write to files
-        pathbuilder.create()
-        tag_element = driver.find_element_by_tag_name(pathbuilder.tagtype)
-        webdriver.screenshot_element(driver, tag_element, pathbuilder.tagimage)
-    except selenium.common.exceptions.WebDriverException:
-        LOGGER.exception("Exception while capturing tags!")
-        return False
-
+    tag_html = tags_per_campaign[pathbuilder.tagsize][pathbuilder.tagtype]
+    pathbuilder.create()
+    output_path = pathbuilder.tagimage
+    errors = capture_tag(driver=driver, tag_html=tag_html, output_path=output_path,
+                         tagtype=pathbuilder.tagtype)
     __write_html(tag_html=tag_html, output_path=pathbuilder.taghtml)
     return errors
 

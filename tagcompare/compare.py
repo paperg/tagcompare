@@ -53,7 +53,6 @@ def __write_result_image(pathbuilder, result_image,
 
 
 def _get_compare_matrix(pathbuilder, configs):
-    compare_image = None
     compare_pb = pathbuilder.clone(build=output.DEFAULT_BUILD_NAME)
 
     # Assumes all compared images will have the same dimensions, also that there is at

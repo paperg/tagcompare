@@ -227,7 +227,7 @@ def create(build, config=None, cid=None, tagsize=None, tagtype=None,
     return PathBuilder(parts=parts, basepath=basepath)
 
 
-def create_from_path(dirpath):
+def create_from_path(dirpath, basepath=OUTPUT_DIR):
     """
     Given a 'dirpath' which corresponds to a path produced by PathBuilder,
     make the PathBuilder object
@@ -242,7 +242,25 @@ def create_from_path(dirpath):
         raise ValueError('path does not exist!  path: {}'.format(dirpath))
 
     parts = _split_pathstr(dirpath, count=_NUM_PARTS)
-    return PathBuilder(parts=parts)
+    return PathBuilder(parts=parts, basepath=basepath)
+
+
+def get_all_paths(buildname, basedir=OUTPUT_DIR):
+    """
+    Given a build directory, get all of the children paths in a list.
+    i.e. ['golden/1/halfpage/iframe/chrome', 'golden/2/halfpage/iframe/firefox']
+    In this case the build_dir is 'golden'
+    """
+    buildpath = os.path.join(basedir, buildname)
+    assert os.path.exists(buildpath), 'path does not exist at {}'.format(buildpath)
+
+    # Gets all the children dirs from the build path
+    # TODO: Note that the depth is fixed at 4, which == NUM_PARTS
+    # We should make this restriction in code and/or add test for this
+    glob_dirs = glob.glob(os.path.join(buildpath, '*/*/*/*'))
+    # print(glob_dirs)
+    child_dirs = filter(lambda f: os.path.isdir(f), glob_dirs)
+    return child_dirs
 
 
 """
@@ -271,6 +289,7 @@ def _split_pathstr(pathstr, count):
     if len(allparts) != count:
         raise ValueError("path string %s doesn't have %s parts!", pathstr, count)
 
+    LOGGER.debug('allparts: %s', str(allparts))
     return allparts
 
 
@@ -309,8 +328,10 @@ def aggregate(outputdir=OUTPUT_DIR, buildname=DEFAULT_BUILD_NAME):
     return aggregate_path
 
 
-def generate_build_string():
+def generate_build_string(prefix=None):
     build = str.format(time.strftime("%Y%m%d-%H%M%S"))
+    if prefix:
+        build = prefix + '_' + build
     return build
 
 
