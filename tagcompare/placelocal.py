@@ -12,6 +12,8 @@ import logger
 TIMESTAMP = time.strftime("%Y%m%d-%H%M%S")
 LOGGER = logger.Logger(__name__).get()
 
+# TODO: Objectify - domain be made into a field
+
 
 def __get_route(route, domain=None):
     if not domain:
@@ -26,9 +28,9 @@ def __get_route(route, domain=None):
     return json.loads(r.text)['data']
 
 
-def __get_active_campaigns(pid):
+def __get_active_campaigns(pid, domain=None):
     route = "api/v2/publication/{}/campaigns?status=active".format(pid)
-    data = __get_route(route)
+    data = __get_route(route, domain)
     campaigns = data['campaigns']
 
     result = []
@@ -40,7 +42,7 @@ def __get_active_campaigns(pid):
     return result
 
 
-def __get_tags(cid):
+def __get_tags(cid, domain=None):
     """
     Gets a set of tags for a campaign,
     the key is its size and the value is the tag HTML
@@ -56,7 +58,7 @@ def __get_tags(cid):
         {"ispreview": 0, "isae": 0, "animationtime": settings.TAG_ANIMATION_TIME,
          "usetagmacros": 0})
     route += qp
-    data = __get_route(route)
+    data = __get_route(route, domain)
     if not data:
         LOGGER.warning("No tags found for cid %s, tags data: %s", cid,
                        data)
@@ -66,13 +68,16 @@ def __get_tags(cid):
     return tags_data
 
 
-def get_tags_for_campaigns(cids):
+def get_tags_for_campaigns(cids, domain=None):
     """
     Gets a set of tags for multiple campaigns:
 
     :param cids: a list of campaign ids
-    :return:
+    :return: a dictionary of tags with the cid as key
     """
+    if not domain:
+        domain = settings.DEFAULT.domain
+
     if not cids:
         raise ValueError("cids not defined!")
     LOGGER.debug(
@@ -81,7 +86,7 @@ def get_tags_for_campaigns(cids):
     tp = ThreadPool(processes=10)
     results = {}
     for cid in cids:
-        results[cid] = tp.apply_async(func=__get_tags, args=(cid,))
+        results[cid] = tp.apply_async(func=__get_tags, args=(cid, domain))
     all_tags = {}
     for cid in results:
         tags = results[cid].get()
