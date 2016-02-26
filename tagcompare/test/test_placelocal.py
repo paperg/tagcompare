@@ -27,10 +27,19 @@ def __validate_tags(tags):
 
 @pytest.mark.integration
 def test_get_tags_for_campaigns():
+    __test_get_tags_for_campaigns(preview=0)
+    __test_get_tags_for_campaigns(preview=1)
+
+
+@pytest.mark.integration
+def __test_get_tags_for_campaigns(preview=0):
     cids = [516675, 509147]
-    tags = placelocal.get_tags_for_campaigns(cids=cids)
+    tags = placelocal.get_tags_for_campaigns(cids=cids, ispreview=preview)
     assert tags, "Did not get tags for cid {}!".format(cids)
-    __validate_tags(tags)
+
+    if preview == 0:
+        # Only run comprehensive validation for real tags
+        __validate_tags(tags)
 
     for cid in tags:
         tags_per_campaign = tags[cid]

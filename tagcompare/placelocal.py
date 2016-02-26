@@ -8,7 +8,6 @@ import requests
 import settings
 import logger
 
-
 TIMESTAMP = time.strftime("%Y%m%d-%H%M%S")
 LOGGER = logger.Logger(__name__).get()
 
@@ -21,10 +20,8 @@ def __get_route(route, domain=None):
 
     url = str.format("https://{}/{}", domain, route)
     r = requests.get(url, headers=settings.DEFAULT.get_placelocal_headers())
-    if r.status_code != 200:
-        raise ValueError("GET {} failed with{}".format(route, r.text))
-    if 'data' not in r.text:
-        raise ValueError("Invalid PL response - no data!")
+    assert r.status_code == 200, "GET {} failed with{}".format(route, r.text)
+    assert 'data' in r.text, "Invalid PL response - no data!"
     return json.loads(r.text)['data']
 
 
@@ -42,12 +39,13 @@ def __get_active_campaigns(pid, domain=None):
     return result
 
 
-def __get_tags(cid, domain=None):
+def __get_tags(cid, ispreview=0, domain=None):
     """
     Gets a set of tags for a campaign,
     the key is its size and the value is the tag HTML
-    :param cid:
-    :return:
+    :param cid: the campaign id
+    :param ispreview: change to 1 to get preview tags, 0 by default
+    :return: tags data for all the tags of a given cid
     """
     # TODO: Support different protocols
     # protocol = ['http_ad_tags', 'https_ad_tags']
@@ -55,7 +53,7 @@ def __get_tags(cid, domain=None):
 
     # Animation time is set to 1 to make it static after 1s
     qp = urlencode(
-        {"ispreview": 0, "isae": 0, "animationtime": settings.TAG_ANIMATION_TIME,
+        {"ispreview": ispreview, "isae": 0, "animationtime": settings.TAG_ANIMATION_TIME,
          "usetagmacros": 0})
     route += qp
     data = __get_route(route, domain)
@@ -68,11 +66,12 @@ def __get_tags(cid, domain=None):
     return tags_data
 
 
-def get_tags_for_campaigns(cids, domain=None):
+def get_tags_for_campaigns(cids, ispreview=0, domain=None):
     """
     Gets a set of tags for multiple campaigns:
 
     :param cids: a list of campaign ids
+    :param ispreview: change to 1 to get preview tags, 0 by default
     :return: a dictionary of tags with the cid as key
     """
     if not domain:
@@ -86,7 +85,8 @@ def get_tags_for_campaigns(cids, domain=None):
     tp = ThreadPool(processes=10)
     results = {}
     for cid in cids:
-        results[cid] = tp.apply_async(func=__get_tags, args=(cid, domain))
+        results[cid] = tp.apply_async(func=__get_tags,
+                                      args=(cid, ispreview, domain))
     all_tags = {}
     for cid in results:
         tags = results[cid].get()

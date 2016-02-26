@@ -1,12 +1,13 @@
+import pytest
 from tagcompare import compare
 
 from tagcompare import output
 from tagcompare import settings
 
-
 settings.TEST_MODE = True
 
 
+@pytest.mark.integration
 def test_compare():
     """
     def compare(pb, cids=None, sizes=settings.DEFAULT.tagsizes,
@@ -27,6 +28,7 @@ def test_compare():
     pb.rmbuild()
 
 
+@pytest.mark.integration
 def test_compare_configs():
     """
     def compare_configs(pathbuilder, configs):
