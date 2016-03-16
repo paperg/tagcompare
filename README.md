@@ -18,8 +18,11 @@ platform/browser configurations
 
 ## Setup
 Clone the repo: `git clone git@github.com:paperg/tagcompare.git`
-`python setup.py install` to install it.  
+`python setup.py install` to install it.
 `which tagcompare` should show that it's installed
+
+(optional): install [_phantomjs_](http://phantomjs.org/)
+`brew install phantomjs`
 
 ### settings.json
 Make a local copy of [`settings.json`](tagcompare/settings.json) called `settings.local.json`

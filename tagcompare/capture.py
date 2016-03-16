@@ -115,7 +115,8 @@ def __capture_tags(capabilities, tags, pathbuilder,
     num_existing_skipped = 0
     num_captured = 0
     browser_errors = []
-    driver = webdriver.setup_webdriver(capabilities)
+    driver = webdriver.setup_webdriver(drivertype=webdriver.WebDriverType.REMOTE,
+                                       capabilities=capabilities)
 
     try:
         for cid in tags:

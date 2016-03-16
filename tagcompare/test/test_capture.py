@@ -55,11 +55,21 @@ def test_capture_tag():
         "iframe": "<iframe>iframe tag for skyscraper</iframe>",
         "script": "<script>script tag for skyscraper</script>",
     }}
+
     capabilities = {
         "platform": "Windows 7",
         "browserName": "chrome"
     }
-    driver = webdriver.setup_webdriver(capabilities)
+    remote_driver = webdriver.setup_webdriver(
+        drivertype=webdriver.WebDriverType.REMOTE,
+        capabilities=capabilities)
+    phantom_driver = webdriver.setup_webdriver(
+        drivertype=webdriver.WebDriverType.PHANTOM_JS)
+    __test_capture_tag(remote_driver, pb, tags)
+    __test_capture_tag(phantom_driver, pb, tags)
+
+
+def __test_capture_tag(driver, pb, tags):
     result = capture.__capture_tag(pathbuilder=pb, tags_per_campaign=tags,
                                    driver=driver,
                                    capture_existing=True)

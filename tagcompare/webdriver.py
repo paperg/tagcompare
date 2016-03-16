@@ -5,6 +5,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.events import EventFiringWebDriver
+from selenium.webdriver.support.events import AbstractEventListener
 
 import settings
 import image
@@ -13,8 +15,28 @@ import logger
 LOGGER = logger.Logger(name=__name__).get()
 
 
-def setup_webdriver(capabilities):
-    driver = __setup_remote_webdriver(capabilities=capabilities)
+class ScreenshotListener(AbstractEventListener):
+    """Automatically screenshots on error, useful for phantomjs errors
+    """
+    def on_exception(self, exception, driver):
+        screenshot_name = "exception.png"
+        driver.get_screenshot_as_file(screenshot_name)
+        LOGGER.error("Exception screenshot saved as '%s'" % screenshot_name)
+
+
+class WebDriverType(object):
+    PHANTOM_JS = "PHANTOM_JS"
+    REMOTE = "REMOTE"
+
+
+def setup_webdriver(drivertype, capabilities=None):
+    if drivertype is WebDriverType.PHANTOM_JS:
+        driver = __setup_phantomjs_webriver()
+    elif drivertype is WebDriverType.REMOTE:
+        driver = __setup_remote_webdriver(capabilities=capabilities)
+    else:
+        raise ValueError('Unsupported `drivertype`!  see WebDriverType')
+
     driver.implicitly_wait(20)
     return driver
 
@@ -31,6 +53,13 @@ def get_capabilities_for_config(config_name, build, max_duration=3600,
     capabilities['build'] = build
     capabilities['maxDuration'] = max_duration
     return capabilities
+
+
+def __setup_phantomjs_webriver():
+    driver = webdriver.PhantomJS()
+    driver = EventFiringWebDriver(driver, ScreenshotListener())
+    driver.set_window_size(1920, 1080)
+    return driver
 
 
 def __setup_remote_webdriver(capabilities):
@@ -74,8 +103,13 @@ def check_browser_logs(driver):
 
 
 def wait_until_element_disappears(driver, locator):
-    WebDriverWait(driver, 20).until(
-        EC.invisibility_of_element_located(locator=locator))
+    try:
+        WebDriverWait(driver, 20).until(
+            EC.invisibility_of_element_located(locator=locator))
+    except Exception as e:
+        # This happens all the time with phantomjs driver
+        LOGGER.warn('Exception while wait_until_element_disappears: %s', e)
+        return
 
 
 def display_tag(driver, tag, wait_for_load=True, wait_time=3):
