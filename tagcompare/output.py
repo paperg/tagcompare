@@ -4,7 +4,6 @@
     - Utility methods for getting the right path to outputs
 """
 import os
-import time
 import glob
 from distutils import dir_util
 import shutil
@@ -329,7 +328,7 @@ def aggregate(outputdir=OUTPUT_DIR, buildname=DEFAULT_BUILD_NAME):
 
 
 def generate_build_string(prefix=None):
-    build = str.format(time.strftime("%Y%m%d-%H%M%S"))
+    build = logger.generate_timestamp()
     if prefix:
         build = prefix + '_' + build
     return build

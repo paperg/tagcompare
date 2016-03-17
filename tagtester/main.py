@@ -3,9 +3,9 @@
 import logging
 import os
 import argparse
+from contextlib import closing
 
 from tagcompare import placelocal
-from tagcompare import webdriver
 from tagcompare import output
 from tagcompare import settings
 from tagcompare import capture
@@ -22,7 +22,7 @@ SETTINGS = {
              147867, 147866, 147865, 147862],
     'sizes': ['medium_rectangle', 'skyscraper', 'halfpage'],
     'types': ['iframe'],
-    'configs': ['chrome', 'firefox'],
+    'configs': ['phantomjs'],
     'preview': 1
 }
 
@@ -45,26 +45,23 @@ def capture_tags():
     browser_errors = {}
     tag_count = 0
     for config in test_configs:
-        test_caps = webdriver.get_capabilities_for_config(config_name=config,
-                                                          build=build)
         tags = placelocal.get_tags_for_campaigns(
             cids=test_cids, ispreview=preview, domain=test_domain)
-        driver = webdriver.setup_webdriver(capabilities=test_caps)
-
-        for cid in test_cids:
-            for s in test_sizes:
-                for t in test_types:
-                    tag_count += 1
-                    pb.cid = cid
-                    pb.tagsize = s
-                    pb.tagtype = t
-                    pb.config = config
-                    taghtml = tags[cid][s][t]
-                    pb.create()
-                    browser_errors[pb.tagname] = capture.capture_tag(
-                        driver=driver, tag_html=taghtml,
-                        output_path=pb.tagimage, tagtype=t)
-        driver.quit()
+        with closing(capture.TagCapture.from_config(config)) as tagcapture:
+            for cid in test_cids:
+                for s in test_sizes:
+                    for t in test_types:
+                        tag_count += 1
+                        pb.cid = cid
+                        pb.tagsize = s
+                        pb.tagtype = t
+                        pb.config = config
+                        taghtml = tags[cid][s][t]
+                        pb.create()
+                        browser_errors[pb.tagname] = tagcapture.capture_tag(
+                            tag_html=taghtml,
+                            output_path=pb.tagimage, tagtype=t)
+                        LOGGER.info('Captured {}'.format(pb.tagimage))
 
     if browser_errors:
         LOGGER.error('Found browser errors in {} tags:\n{}'.format(

@@ -75,6 +75,7 @@ def crop(img_file, cropbox, backup=False):
     img = Image.open(img_file)
 
     if cropbox:
+        # TODO: validate cropbox within image
         img = img.crop(cropbox)
 
     if backup:

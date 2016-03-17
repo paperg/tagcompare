@@ -39,12 +39,12 @@ def __get_active_campaigns(pid, domain=None):
     return result
 
 
-def __get_tags(cid, ispreview=0, domain=None):
+def __get_tags(cid, ispreview=1, domain=None):
     """
     Gets a set of tags for a campaign,
     the key is its size and the value is the tag HTML
     :param cid: the campaign id
-    :param ispreview: change to 1 to get preview tags, 0 by default
+    :param ispreview: preview tags don't generate tracking traffic
     :return: tags data for all the tags of a given cid
     """
     # TODO: Support different protocols

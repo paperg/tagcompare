@@ -10,6 +10,14 @@ from tagcompare import output
 TESTPATH = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 
 
+@pytest.fixture
+def __get_pathbuilder(build="testbuild", config="testconfig", cid=131313,
+                      tagsize="testsize",
+                      tagtype="testtype"):
+    return output.create(config=config, cid=cid, tagsize=tagsize,
+                         build=build, tagtype=tagtype)
+
+
 def __assert_correct_path(pathbuilder):
     expectedstr = "{}/{}/{}/{}/{}/{}".format(
         pathbuilder.basepath, pathbuilder.build,
@@ -36,13 +44,6 @@ def __rmbuild_and_validate(pb):
     result = pb.rmbuild()
     assert not pb.pathexists(), "Path should not exist after removal!"
     return result
-
-
-def __get_pathbuilder(build="testbuild", config="testconfig", cid=131313,
-                      tagsize="testsize",
-                      tagtype="testtype"):
-    return output.create(config=config, cid=cid, tagsize=tagsize,
-                         build=build, tagtype=tagtype)
 
 
 def __validate_cidpath(pathbuilder):
@@ -80,6 +81,12 @@ def test_pathbuilder_create():
     __rmbuild_and_validate(pathbuilder)
 
 
+def test_get_all_paths():
+    paths = output.get_all_paths(buildname="testbuild",
+                                 basedir=settings.Test.TEST_ASSETS_DIR)
+    assert paths, "Could not get paths from get_all_paths!"
+
+
 def test_pathbuilder_path():
     pathbuilder = __get_pathbuilder()
     __assert_correct_path(pathbuilder)
@@ -88,7 +95,8 @@ def test_pathbuilder_path():
     pathbuilder.tagsize = "testsize1"
     __validate_pathbuilder_params(pathbuilder, tagsize="testsize1")
     __assert_correct_path(pathbuilder)
-    pathbuilder.cid = 999999  # Check that using a int instead of str for cid is OK
+    # Check that using a int instead of str for cid is OK
+    pathbuilder.cid = 999999
     __validate_pathbuilder_params(pathbuilder, cid="999999")
     __assert_correct_path(pathbuilder)
     pathbuilder.config = "testconfig"
@@ -165,18 +173,22 @@ def test_pathbuilder_clone():
 
     basepath = os.path.join(TESTPATH, "clonebase")
     pb4 = pb1.clone(basepath=basepath)
-    assert basepath in str(pb4.path), "basepath should be part of the cloned path!"
+    assert basepath in str(
+        pb4.path), "basepath should be part of the cloned path!"
     pb5 = pb4.clone()
-    assert basepath in str(pb5.path), "basepath should be part of the cloned path!"
+    assert basepath in str(
+        pb5.path), "basepath should be part of the cloned path!"
 
 
 def test_output_create_parts():
     pb = __get_pathbuilder()
     parts = pb._parts
-    assert output._NUM_PARTS == len(output.ResultParts), "Incorrect number of parts!"
+    assert output._NUM_PARTS == len(
+        output.ResultParts), "Incorrect number of parts!"
     assert parts[output.ResultParts.BUILD] == pb.build, \
         "invalid parts index for build!"
-    assert parts[output.ResultParts.CID] == pb.cid, "invalid parts index for cid!"
+    assert parts[
+        output.ResultParts.CID] == pb.cid, "invalid parts index for cid!"
     assert parts[output.ResultParts.TAGSIZE] == pb.tagsize, \
         "invalid parts index for tagsize!"
     assert parts[output.ResultParts.TAGTYPE] == pb.tagtype, \
@@ -242,5 +254,6 @@ def test_pathbuilder_get_path():
 
 
 def test_generate_build_string():
-    string = output.generate_build_string()
-    assert string, "Generated a build string!"
+    prefix = 'testprefix'
+    string = output.generate_build_string(prefix=prefix)
+    assert string.startswith(prefix), "Generated a build string!"

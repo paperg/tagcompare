@@ -5,6 +5,30 @@ import pytest
 from tagcompare import webdriver
 from tagcompare import settings
 from tagcompare.webdriver import WebDriverType
+from selenium.common.exceptions import WebDriverException
+
+
+class MockWebDriver():
+    """Mock WebDriver class for testing
+    """
+
+    def __init__(self, throws=False):
+        self.__throws = throws
+
+    def get_log(self, logname):
+        if self.__throws:
+            raise WebDriverException()
+        else:
+            return [{'level': 'SEVERE', 'message': 'got some errors!'}]
+
+
+def test_check_browser_errors():
+    good_driver = MockWebDriver()
+    bad_driver = MockWebDriver(throws=True)
+    logs = webdriver.check_browser_errors(good_driver)
+    assert logs, 'There should be some browser logs!'
+    logs = webdriver.check_browser_errors(bad_driver)
+    assert not logs, 'There should be no browser logs!'
 
 
 def test_setup_webdriver_exceptions():
@@ -18,17 +42,11 @@ def test_setup_webdriver_exceptions():
 
 
 def test_phantomjs_screenshot_tag():
-    testdriver = webdriver.setup_webdriver(WebDriverType.PHANTOM_JS)
+    testdriver = webdriver.setup_webdriver(
+        WebDriverType.PHANTOM_JS, screenshot_on_exception=True)
     __test_webdriver_display_tag(testdriver, check_errors=False)
     __test_screenshot_tag(testdriver)
     testdriver.quit()
-
-
-def test_get_capabilities_for_config():
-    config_name = 'chrome'
-    caps = webdriver.get_capabilities_for_config(config_name=config_name,
-                                                 build='testbuild')
-    assert caps['name'] == config_name
 
 
 @pytest.mark.integration

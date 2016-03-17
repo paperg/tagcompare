@@ -18,8 +18,11 @@ LOGGER = logger.Logger(name=__name__).get()
 class ScreenshotListener(AbstractEventListener):
     """Automatically screenshots on error, useful for phantomjs errors
     """
+
     def on_exception(self, exception, driver):
-        screenshot_name = "exception.png"
+        # TODO: Put exception images with where the build is running
+        screenshot_name = "phantomjs_exception_{}.png".format(
+            logger.generate_timestamp())
         driver.get_screenshot_as_file(screenshot_name)
         LOGGER.error("Exception screenshot saved as '%s'" % screenshot_name)
 
@@ -29,9 +32,9 @@ class WebDriverType(object):
     REMOTE = "REMOTE"
 
 
-def setup_webdriver(drivertype, capabilities=None):
+def setup_webdriver(drivertype, capabilities=None, screenshot_on_exception=False):
     if drivertype is WebDriverType.PHANTOM_JS:
-        driver = __setup_phantomjs_webriver()
+        driver = __setup_phantomjs_webriver(screenshot_on_exception)
     elif drivertype is WebDriverType.REMOTE:
         driver = __setup_remote_webdriver(capabilities=capabilities)
     else:
@@ -41,23 +44,10 @@ def setup_webdriver(drivertype, capabilities=None):
     return driver
 
 
-def get_capabilities_for_config(config_name, build, max_duration=3600,
-                                all_configs=None):
-    if not all_configs:
-        all_configs = settings.DEFAULT.all_configs
-    assert config_name in all_configs, 'configname not in all_configs!'
-    config_data = all_configs[config_name]
-    assert config_data['enabled'], 'config not enabled!'
-    capabilities = config_data['capabilities']
-    capabilities['name'] = config_name
-    capabilities['build'] = build
-    capabilities['maxDuration'] = max_duration
-    return capabilities
-
-
-def __setup_phantomjs_webriver():
+def __setup_phantomjs_webriver(screenshot_on_exception=False):
     driver = webdriver.PhantomJS()
-    driver = EventFiringWebDriver(driver, ScreenshotListener())
+    if screenshot_on_exception:
+        driver = EventFiringWebDriver(driver, ScreenshotListener())
     driver.set_window_size(1920, 1080)
     return driver
 
@@ -81,7 +71,7 @@ def __setup_remote_webdriver(capabilities):
     return driver
 
 
-def check_browser_logs(driver):
+def check_browser_errors(driver):
     """
     Checks browser for errors, returns a list of errors
     This only works for Chrome
@@ -104,11 +94,11 @@ def check_browser_logs(driver):
 
 def wait_until_element_disappears(driver, locator):
     try:
-        WebDriverWait(driver, 20).until(
+        WebDriverWait(driver, 5).until(
             EC.invisibility_of_element_located(locator=locator))
     except Exception as e:
         # This happens all the time with phantomjs driver
-        LOGGER.warn('Exception while wait_until_element_disappears: %s', e)
+        LOGGER.debug('Exception while wait_until_element_disappears: %s', e)
         return
 
 
@@ -128,7 +118,7 @@ def display_tag(driver, tag, wait_for_load=True, wait_time=3):
         time.sleep(settings.TAG_ANIMATION_TIME)
         time.sleep(wait_time)
 
-    errors = check_browser_logs(driver)
+    errors = check_browser_errors(driver)
     return errors
 
 

@@ -34,6 +34,11 @@ def test_init_invalid_params():
         print(filename)
 
 
+def generate_timestamp():
+    timestamp = logger.generate_timestamp()
+    assert timestamp, "Did not generate a timestamp!"
+
+
 def test_logger_name():
     testlogger = logger.Logger("test7.log")
     assert testlogger.name == "test7", \

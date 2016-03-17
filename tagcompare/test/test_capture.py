@@ -3,13 +3,13 @@ import os
 import pytest
 
 from tagcompare import capture
-from tagcompare import settings
+from tagcompare.capture import TagCapture
 from tagcompare import output
-from tagcompare import webdriver
 
 
-SETTINGS = settings.Settings(configfile='test/assets/test_settings.json',
-                             comparefile='test/assets/test_compare.json')
+@pytest.fixture
+def tagcapture_phantom():
+    return TagCapture.from_config('phantomjs')
 
 
 @pytest.mark.integration
@@ -35,16 +35,31 @@ def test_capture_configs():
     adtypes = ["iframe"]
 
     pb = output.create(build="capture_test")
-    errors = capture.__capture_tags_for_configs(cids=cids, pathbuilder=pb,
-                                                configs=configs,
-                                                tagsizes=adsizes, tagtypes=adtypes,
-                                                capture_existing=True)
+    errors = capture._capture_tags_for_configs(cids=cids, pathbuilder=pb,
+                                               configs=configs,
+                                               tagsizes=adsizes, tagtypes=adtypes,
+                                               capture_existing=True)
     assert errors, "There should be at least one error!"
     pb.rmbuild()
 
 
-@pytest.mark.integration
 def test_capture_tag():
+    tc = tagcapture_phantom()
+    tag_htmls = {
+        'div': '<div>Some text inside div</div>',
+        'span': '<span>Some text inside span</span>'
+    }
+
+    for tagtype in tag_htmls:
+        tag_html = tag_htmls[tagtype]
+        output_path = tagtype + '_test.png'
+        tc.capture_tag(tag_html, output_path, tagtype)
+        assert os.path.exists(output_path), 'No output from capture_tag!'
+        os.remove(output_path)
+
+
+@pytest.mark.integration
+def test_capture_tag_remote():
     """
     Verify that we can capture iframe and script tags
     :return:
@@ -60,20 +75,15 @@ def test_capture_tag():
         "platform": "Windows 7",
         "browserName": "chrome"
     }
-    remote_driver = webdriver.setup_webdriver(
-        drivertype=webdriver.WebDriverType.REMOTE,
-        capabilities=capabilities)
-    phantom_driver = webdriver.setup_webdriver(
-        drivertype=webdriver.WebDriverType.PHANTOM_JS)
-    __test_capture_tag(remote_driver, pb, tags)
-    __test_capture_tag(phantom_driver, pb, tags)
+
+    remote_capture = TagCapture.from_caps(capabilities)
+    __test_capture_tag(remote_capture, pb, tags)
 
 
-def __test_capture_tag(driver, pb, tags):
-    result = capture.__capture_tag(pathbuilder=pb, tags_per_campaign=tags,
-                                   driver=driver,
-                                   capture_existing=True)
-    driver.quit()
+def __test_capture_tag(tagcapture, pb, tags):
+    result = tagcapture._capture_tag(pathbuilder=pb, tags_per_campaign=tags,
+                                     capture_existing=True)
+    tagcapture.close()
     assert result is not None, "Could not capture tags!"
     assert result is not False, "Tag capture skipped!"
     assert len(result) == 0, "Errors while capturing tags!"

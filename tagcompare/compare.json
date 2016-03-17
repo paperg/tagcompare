@@ -16,6 +16,9 @@
         "browserName": "chrome"
       }
     },
+    "phantomjs": {
+      "enabled": true
+    },
     "chrome": {
       "enabled": true,
       "capabilities": {
