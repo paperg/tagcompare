@@ -16,6 +16,8 @@ import logger
 MAX_REMOTE_JOBS = 6
 LOGGER = logger.Logger(name="capture", writefile=True).get()
 
+placelocal_api = placelocal.PlaceLocalApi()
+
 
 class TagCapture(object):
     """TagCapture uses webdriver to capture tags for campaigns"""
@@ -180,7 +182,7 @@ def _capture_tags_for_configs(cids, pathbuilder,
                               tagsizes=settings.DEFAULT.tagsizes,
                               tagtypes=settings.DEFAULT.tagtypes,
                               capture_existing=False):
-    all_tags = placelocal.get_tags_for_campaigns(cids=cids)
+    all_tags = placelocal_api.get_tags_for_campaigns(cids=cids)
     if not all_tags:
         LOGGER.warn("No tags found to capture!")
         return
@@ -223,7 +225,7 @@ def main():
     original_build = output.generate_build_string()
     build = "capture_" + original_build
     pathbuilder = output.create(build=build)
-    cids = placelocal.get_cids_from_settings()
+    cids = placelocal_api.get_cids_from_settings()
     LOGGER.info("Starting capture against %s for %s campaigns: %s...",
                 settings.DEFAULT.domain,
                 len(cids), cids)

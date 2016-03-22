@@ -12,6 +12,8 @@ import image
 LOGGER = logger.Logger("compare", writefile=True).get()
 NUM_COMPARE_PROCESSES = 8
 
+placelocal_api = placelocal.PlaceLocalApi()
+
 
 class CompareResult(object):
     def __init__(self):
@@ -61,7 +63,8 @@ def _get_compare_matrix(pathbuilder, configs):
         LOGGER.error("Cannot build comparison matrix, no configs.")
         return None
 
-    test_image = image.normalize_img(compare_pb.clone(config=configs[0]).tagimage)
+    test_image = image.normalize_img(
+        compare_pb.clone(config=configs[0]).tagimage)
     single_image_width = test_image.width
     single_image_height = test_image.height
     num_configs = len(configs)
@@ -70,7 +73,8 @@ def _get_compare_matrix(pathbuilder, configs):
     # reduces number of loads to n from n^2.
     images_by_config = {}
     for cfg in configs:
-        images_by_config[cfg] = image.normalize_img(compare_pb.clone(config=cfg).tagimage)
+        images_by_config[cfg] = image.normalize_img(
+            compare_pb.clone(config=cfg).tagimage)
 
     # 2x2 comparison matrix, so it'll be kinda big.
     compare_image = image.blank_compare_matrix(num_configs, single_image_width,
@@ -85,11 +89,13 @@ def _get_compare_matrix(pathbuilder, configs):
         a_cfg = configs[a]
         b_cfg = configs[b]
 
-        draw_position = (a*single_image_width, b*single_image_height)
+        draw_position = (a * single_image_width, b * single_image_height)
 
         if a == b:
-            # Special case, we know they'll be same image, so just render the image.
-            tagimage = image.normalize_img(compare_pb.clone(config=a_cfg).tagimage)
+            # Special case, we know they'll be same image, so just render the
+            # image.
+            tagimage = image.normalize_img(
+                compare_pb.clone(config=a_cfg).tagimage)
             image.add_label(image=tagimage, label=a_cfg)
             # Use 4-tuple for "draw_position"? Shouldn't be necessary since width and
             # height are invariant.
@@ -113,7 +119,8 @@ def _compare_configs(pathbuilder, configs, comparison, result):
         result.increment(key=diff)
         return False
 
-    result_image = _get_compare_matrix(pathbuilder=pathbuilder, configs=configs)
+    result_image = _get_compare_matrix(
+        pathbuilder=pathbuilder, configs=configs)
 
     prefix_label = comparison + "_"
     r = __handle_output(pathbuilder=pathbuilder, result_image=result_image,
@@ -201,7 +208,7 @@ def main(build=None):
     jobname = "compare_" + build
     pb = output.create(build=jobname)
 
-    cids = placelocal.get_cids_from_settings()
+    cids = placelocal_api.get_cids_from_settings()
     compare(pb, cids=cids)
     return pb
 

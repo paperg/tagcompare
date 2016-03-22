@@ -4,7 +4,12 @@ import json
 import pytest
 
 from tagcompare import settings
-from tagcompare import placelocal
+from tagcompare.placelocal import PlaceLocalApi
+
+
+@pytest.fixture
+def PlApi():
+    return PlaceLocalApi()
 
 
 def __read_json_file(jsonfile):
@@ -27,20 +32,12 @@ def __validate_tags(tags):
 
 @pytest.mark.integration
 def test_get_tags_for_campaigns():
-    __test_get_tags_for_campaigns(preview=0)
-    __test_get_tags_for_campaigns(preview=1)
-
-
-@pytest.mark.integration
-def __test_get_tags_for_campaigns(preview=0):
     cids = [516675, 509147]
-    tags = placelocal.get_tags_for_campaigns(cids=cids, ispreview=preview)
+    tags = PlApi().get_tags_for_campaigns(
+        cids=cids, ispreview=0)
     assert tags, "Did not get tags for cid {}!".format(cids)
 
-    if preview == 0:
-        # Only run comprehensive validation for real tags
-        __validate_tags(tags)
-
+    __validate_tags(tags)
     for cid in tags:
         tags_per_campaign = tags[cid]
         assert len(tags_per_campaign) == 6, "Should have 6 sizes per campaign!"
@@ -53,17 +50,17 @@ def __test_get_tags_for_campaigns(preview=0):
 @pytest.mark.integration
 def test_get_tags_for_campaigns_invalid():
     cids = [999999]
-    tags = placelocal.get_tags_for_campaigns(cids=cids)
+    tags = PlApi().get_tags_for_campaigns(cids=cids)
     assert not tags, "Should not have gotten tags for an invalid cid!"
 
     with pytest.raises(ValueError):
-        placelocal.get_tags_for_campaigns(cids=None)
+        PlApi().get_tags_for_campaigns(cids=None)
 
 
 @pytest.mark.integration
 def test_get_cids_from_publications():
     pids = [627]
-    cids = placelocal._get_cids(pids=pids)
+    cids = PlApi()._get_cids(pids=pids)
     assert cids, "Did not get any campaigns for pids: {}!".format(pids)
     assert len(cids) > 0, "Should have found some active campaigns!"
     print "Found {} campaigns for publishers: {}".format(len(cids), pids)
@@ -72,7 +69,7 @@ def test_get_cids_from_publications():
 @pytest.mark.integration
 def test_get_all_pids():
     pids = [297, 627]
-    all_pids = placelocal._get_all_pids(pids)
+    all_pids = PlApi()._get_all_pids(pids)
     assert len(all_pids) == 5
     assert 627 in all_pids
 
@@ -80,11 +77,11 @@ def test_get_all_pids():
 @pytest.mark.integration
 def test_get_pids_from_publisher():
     with pytest.raises(ValueError):
-        placelocal._get_pids_from_publisher(pid=None)
+        PlApi()._get_pids_from_publisher(pid=None)
 
 
 def test_get_cids():
-    cids = placelocal._get_cids(cids=[1, 2, 3])
+    cids = PlApi()._get_cids(cids=[1, 2, 3])
     assert cids, "Could not get cids!"
     assert len(cids) == 3, "There should be exactly 3 cids!"
 
@@ -93,10 +90,10 @@ def test_get_cids_from_settings():
     settings_obj = settings.Settings(configfile='test/assets/test_settings.json',
                                      comparefile='test/assets/test_compare.json',
                                      logdir='test/assets/output/')
-    cids = placelocal.get_cids_from_settings(settings_obj)
+    cids = PlApi().get_cids_from_settings(settings_obj)
     assert 131313 in cids
 
 
 def test_get_cids_invalid():
     with pytest.raises(ValueError):
-        placelocal._get_cids()
+        PlApi()._get_cids()

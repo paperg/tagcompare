@@ -28,6 +28,8 @@ SETTINGS = {
 
 LOGGER = logging.getLogger('tagtester')
 
+placelocal_api = placelocal.PlaceLocalApi()
+
 
 def capture_tags():
     LOGGER.info(
@@ -45,7 +47,7 @@ def capture_tags():
     browser_errors = {}
     tag_count = 0
     for config in test_configs:
-        tags = placelocal.get_tags_for_campaigns(
+        tags = placelocal_api.get_tags_for_campaigns(
             cids=test_cids, ispreview=preview, domain=test_domain)
         with closing(capture.TagCapture.from_config(config)) as tagcapture:
             for cid in test_cids:
