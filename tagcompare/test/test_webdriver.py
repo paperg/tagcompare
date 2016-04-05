@@ -80,12 +80,15 @@ def __test_screenshot_tag(testdriver):
     os.remove(screenshot_path)
 
 
-def __test_webdriver_display_tag(testdriver, check_errors=True):
+def __test_webdriver_display_tag(testdriver, check_errors=True,
+                                 tagtype='iframe'):
     # The specific tag I'm using will have one browser error in it
     tag_path = os.path.join(settings.Test.TEST_ASSETS_DIR, "test_tag.html")
     with open(tag_path, "r") as tag_file:
         test_pl_tag = tag_file.read()
         errors = webdriver.display_tag(driver=testdriver, tag=test_pl_tag)
+        tag_element = testdriver.find_element_by_tag_name(tagtype)
+        assert tag_element, "Could not get tag element!"
         if check_errors:
             assert len(errors) == 1, "We should have found exactly 1 error!"
             assert errors[0][

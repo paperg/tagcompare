@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
 TEST_FILE="$1"
-PYTHONPATH=. py.test -s --cov-config .coveragerc --cov-report=term-missing --cov=tagcompare "$TEST_FILE"
+PYTHONPATH=. py.test -s -vv --cov-config .coveragerc --cov-report=term-missing --cov=tagcompare "$TEST_FILE"

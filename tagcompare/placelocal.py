@@ -13,60 +13,31 @@ LOGGER = logger.Logger(__name__).get()
 
 
 class PlaceLocalApi:
-    def __init__(self, domain=None, cids=[]):
+    API_PREFIX = "api/v2/"
+
+    def __init__(self, domain=None, request_headers=None, validate=True):
         if not domain:
             domain = settings.DEFAULT.domain
+        if not request_headers:
+            request_headers = settings.DEFAULT.get_placelocal_headers()
         self._domain = domain
+        self._request_headers = request_headers
+        self._validate = validate
 
-    def get(self, route):
-        url = str.format("https://{}/{}", self._domain, route)
+    def put(self, route, data=None, prefix=API_PREFIX):
+        url = str.format("https://{}/{}/{}", self._domain,
+                         prefix, route)
+        r = requests.put(url, data=data, headers=self._request_headers)
+        self.__validate_response(r, url)
+        return r
+
+    def get(self, route, prefix=API_PREFIX):
+        url = str.format("https://{}/{}/{}", self._domain,
+                         prefix, route)
         r = requests.get(
-            url, headers=settings.DEFAULT.get_placelocal_headers())
-        assert r.status_code == 200, "GET {} failed with{}".format(
-            route, r.text)
-        assert 'data' in r.text, "Invalid PL response - no data!"
-        return json.loads(r.text)['data']
-
-    def __get_active_campaigns(self, pid):
-        route = "api/v2/publication/{}/campaigns?status=active".format(pid)
-        data = self.get(route)
-        campaigns = data['campaigns']
-
-        result = []
-        for c in campaigns:
-            cid = c['id']
-            result.append(cid)
-        LOGGER.debug("Found %s active campaigns for publisher %s.  IDs: %s",
-                     len(campaigns), pid, result)
-        return result
-
-    def __get_tags(self, cid, ispreview=1):
-        """
-        Gets a set of tags for a campaign,
-        the key is its size and the value is the tag HTML
-        :param cid: the campaign id
-        :param ispreview: preview tags don't generate tracking traffic
-        :return: tags data for all the tags of a given cid
-        """
-        # TODO: Support different protocols
-        # protocol = ['http_ad_tags', 'https_ad_tags']
-        route = "api/v2/campaign/{}/tags?".format(cid)
-
-        # Animation time is set to 1 to make it static after 1s
-        qp = urlencode(
-            {"ispreview": ispreview,
-             "isae": 0,
-             "animationtime": settings.TAG_ANIMATION_TIME,
-             "usetagmacros": 0})
-        route += qp
-        data = self.get(route)
-        if not data:
-            LOGGER.warning("No tags found for cid %s, tags data: %s", cid,
-                           data)
-            return None
-
-        tags_data = data['http_ad_tags']
-        return tags_data
+            url, headers=self._request_headers)
+        self.__validate_response(r, url)
+        return PlaceLocalApi._get_response_data(r)
 
     def get_tags_for_campaigns(self, cids, ispreview=1):
         """
@@ -97,10 +68,84 @@ class PlaceLocalApi:
                      cids, all_tags)
         return all_tags
 
+    def get_cids_from_settings(self, settings_obj=settings.DEFAULT):
+        cids = settings_obj.campaigns
+        pids = settings_obj.publishers
+        return self._get_cids(cids, pids)
+
+    def submit_campaign(self, cid):
+        route = "/campaign/{}/submit".format(cid)
+        return self.put(route)
+
+    """ Private functions """
+
+    @staticmethod
+    def _is_valid_response(response, url):
+        try:
+            assert response.status_code == 200, "GET {} failed with {}:\n{}".format(
+                url, response.status_code, response.text)
+            assert 'status_code' in response.text, "Invalid PL response - no status!"
+            assert 'data' in response.text, "Invalid PL response - no data!"
+            return True
+        except AssertionError:
+            return False
+
+    def __validate_response(self, response, url):
+        valid = PlaceLocalApi._is_valid_response(response, url)
+        err_message = 'Invalid response for url {}: \n{}'.format(url, response)
+        if self._validate:
+            assert valid, err_message
+
+    @staticmethod
+    def _get_response_data(response):
+        result = json.loads(response.text)
+        return result['data']
+
+    def __get_active_campaigns(self, pid):
+        route = "publication/{}/campaigns?status=active".format(pid)
+        data = self.get(route)
+        campaigns = data['campaigns']
+
+        result = []
+        for c in campaigns:
+            cid = c['id']
+            result.append(cid)
+        LOGGER.debug("Found %s active campaigns for publisher %s.  IDs: %s",
+                     len(campaigns), pid, result)
+        return result
+
+    def __get_tags(self, cid, ispreview=1):
+        """
+        Gets a set of tags for a campaign,
+        the key is its size and the value is the tag HTML
+        :param cid: the campaign id
+        :param ispreview: preview tags don't generate tracking traffic
+        :return: tags data for all the tags of a given cid
+        """
+        # TODO: Support different protocols
+        # protocol = ['http_ad_tags', 'https_ad_tags']
+        route = "campaign/{}/tags?".format(cid)
+
+        # Animation time is set to 1 to make it static after 1s
+        qp = urlencode(
+            {"ispreview": ispreview,
+             "isae": 0,
+             "animationtime": settings.TAG_ANIMATION_TIME,
+             "usetagmacros": 0})
+        route += qp
+        data = self.get(route)
+        if not data:
+            LOGGER.warning("No tags found for cid %s, tags data: %s", cid,
+                           data)
+            return None
+
+        tags_data = data['http_ad_tags']
+        return tags_data
+
     def _get_pids_from_publisher(self, pid):
         if not pid:
             raise ValueError("Invalid publisher id!")
-        route = "api/v2/publisher/{}/publications".format(pid)
+        route = "publisher/{}/publications".format(pid)
         data = self.get(route)
         if not data:
             return None
@@ -127,11 +172,6 @@ class PlaceLocalApi:
         result = list(set(all_pids))  # unique list
         LOGGER.debug("_get_all_pids: %s", result)
         return result
-
-    def get_cids_from_settings(self, settings_obj=settings.DEFAULT):
-        cids = settings_obj.campaigns
-        pids = settings_obj.publishers
-        return self._get_cids(cids, pids)
 
     def _get_cids(self, cids=None, pids=None):
         """

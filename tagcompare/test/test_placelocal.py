@@ -9,12 +9,27 @@ from tagcompare.placelocal import PlaceLocalApi
 
 @pytest.fixture
 def PlApi():
-    return PlaceLocalApi()
+    # Test against QA and don't validate the response (so the test can)
+    return PlaceLocalApi(domain='www.placelocalqa.com', validate=False)
+
+
+def PlApiInvalid():
+    return PlaceLocalApi(domain='www.placelocalqa.com', validate=True)
+
+
+def test_invalid_requests():
+    with pytest.raises(AssertionError):
+        PlApiInvalid().get('bad/route')
 
 
 def __read_json_file(jsonfile):
     with open(jsonfile) as f:
         return json.load(f)
+
+
+def test_constructor_defaults():
+    testApiClient = PlaceLocalApi()
+    assert testApiClient
 
 
 def __validate_tags(tags):
@@ -31,8 +46,15 @@ def __validate_tags(tags):
 
 
 @pytest.mark.integration
+def test_submit_campaign():
+    response = PlApi().submit_campaign(cid=148548)
+    assert response, "No response from test_submit_campaign"
+    assert response.status_code == 200, "Invalid response from submit!"
+
+
+@pytest.mark.integration
 def test_get_tags_for_campaigns():
-    cids = [516675, 509147]
+    cids = [148548, 148487]
     tags = PlApi().get_tags_for_campaigns(
         cids=cids, ispreview=0)
     assert tags, "Did not get tags for cid {}!".format(cids)
@@ -68,10 +90,10 @@ def test_get_cids_from_publications():
 
 @pytest.mark.integration
 def test_get_all_pids():
-    pids = [297, 627]
+    pids = [486, 510]
     all_pids = PlApi()._get_all_pids(pids)
-    assert len(all_pids) == 5
-    assert 627 in all_pids
+    assert len(all_pids) == 2
+    assert 647 in all_pids
 
 
 @pytest.mark.integration

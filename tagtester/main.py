@@ -3,6 +3,7 @@
 import logging
 import os
 import argparse
+import time
 from contextlib import closing
 
 from tagcompare import placelocal
@@ -23,10 +24,22 @@ SETTINGS = {
     'sizes': ['medium_rectangle', 'skyscraper', 'halfpage'],
     'types': ['iframe'],
     'configs': ['chrome'],
-    'preview': 1
+    'preview': 1,
+    'resubmit': False
 }
 
 LOGGER = logging.getLogger('tagtester')
+
+
+def __submit_campaigns(placelocal_api, cids, wait_time=60):
+    for cid in cids:
+        LOGGER.info('Re-submitting campaign %s...', cid)
+        placelocal_api.submit_campaign(cid)
+
+    # It takes a minute or two after submit for it to take effect
+    if wait_time > 0:
+        LOGGER.info('Waiting %s after submits...', wait_time)
+        time.sleep(wait_time)
 
 
 def capture_tags():
@@ -38,10 +51,16 @@ def capture_tags():
     test_types = SETTINGS['types']
     test_configs = SETTINGS['configs']
     preview = SETTINGS['preview']
+    resubmit = SETTINGS['resubmit']
+
+    placelocal_api = placelocal.PlaceLocalApi(domain=test_domain)
 
     build = output.generate_build_string(prefix='tagtester')
     pb = output.create(build, basepath=OUTPUT_BASEDIR)
     placelocal_api = placelocal.PlaceLocalApi(domain=test_domain)
+
+    if resubmit:
+        __submit_campaigns(placelocal_api, cids=test_cids)
 
     browser_errors = {}
     tag_count = 0
@@ -59,9 +78,13 @@ def capture_tags():
                         pb.config = config
                         taghtml = tags[cid][s][t]
                         pb.create()
-                        browser_errors[pb.tagname] = tagcapture.capture_tag(
-                            tag_html=taghtml,
-                            output_path=pb.tagimage, tagtype=t)
+                        try:
+                            browser_errors[pb.tagname] = tagcapture.capture_tag(
+                                tag_html=taghtml,
+                                output_path=pb.tagimage, tagtype=t)
+                        except Exception as ex:
+                            LOGGER.warn('Caught exception:\n%s', ex)
+                            continue
                         LOGGER.info('Captured {}'.format(pb.tagimage))
 
     if browser_errors:
