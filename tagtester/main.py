@@ -29,7 +29,6 @@ SETTINGS = {
 LOGGER = logging.getLogger('tagtester')
 
 
-
 def capture_tags():
     LOGGER.info(
         'Starting tagtester capture with settings: {}'.format(SETTINGS))
