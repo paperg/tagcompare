@@ -22,13 +22,12 @@ SETTINGS = {
              147867, 147866, 147865, 147862],
     'sizes': ['medium_rectangle', 'skyscraper', 'halfpage'],
     'types': ['iframe'],
-    'configs': ['phantomjs'],
+    'configs': ['chrome'],
     'preview': 1
 }
 
 LOGGER = logging.getLogger('tagtester')
 
-placelocal_api = placelocal.PlaceLocalApi()
 
 
 def capture_tags():
@@ -43,12 +42,13 @@ def capture_tags():
 
     build = output.generate_build_string(prefix='tagtester')
     pb = output.create(build, basepath=OUTPUT_BASEDIR)
+    placelocal_api = placelocal.PlaceLocalApi(domain=test_domain)
 
     browser_errors = {}
     tag_count = 0
     for config in test_configs:
         tags = placelocal_api.get_tags_for_campaigns(
-            cids=test_cids, ispreview=preview, domain=test_domain)
+            cids=test_cids, ispreview=preview)
         with closing(capture.TagCapture.from_config(config)) as tagcapture:
             for cid in test_cids:
                 for s in test_sizes:
