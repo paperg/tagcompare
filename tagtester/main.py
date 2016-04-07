@@ -111,7 +111,10 @@ def compare_builds(build, reference='golden'):
 
     for bp in build_paths:
         build_pb = output.create_from_path(bp, basepath=OUTPUT_BASEDIR)
-        ref_pb = build_pb.clone(build=reference)
+
+        # The reference build is included at the root level of tagtester
+        ref_pb = build_pb.clone(build=reference, basepath=os.path.dirname(__file__))
+        assert os.path.exists(ref_pb.buildpath), 'Reference build not found!'
 
         # We can compare iff both paths exists
         build_image = build_pb.tagimage
