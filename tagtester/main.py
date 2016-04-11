@@ -12,7 +12,6 @@ from tagcompare import settings
 from tagcompare import capture
 from tagcompare import image
 
-
 MODULE_NAME = 'tagtester'
 OUTPUT_BASEDIR = os.path.join(settings.HOME_DIR, MODULE_NAME)
 
@@ -130,6 +129,12 @@ def compare_builds(build, reference='golden'):
             continue
 
         result = image.compare(build_pb.tagimage, ref_pb.tagimage)
+
+        # generate diff image using imagemagick
+        diff_img_name = "diff_" + build_pb.tagname
+        diff_img_path = os.path.join(build_pb.buildpath, diff_img_name) + ".png"
+        image.generate_diff_img(build_pb.tagimage, ref_pb.tagimage, diff_img_path)
+
         LOGGER.debug('Result for %s: %s', compare_build, result)
         if result > settings.ImageErrorLevel.SLIGHT:
             compare_errors[build_image] = result
@@ -171,6 +176,7 @@ def main():
         build = args.compare_build
 
     compare_builds(build)
+
 
 if __name__ == '__main__':
     main()

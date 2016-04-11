@@ -5,7 +5,6 @@ import shutil
 
 import logger
 
-
 LOGGER = logger.Logger(__name__).get()
 
 
@@ -14,11 +13,26 @@ def compare(file1, file2):
     image2 = normalize_img(file2)
 
     result = _compare_img(image1, image2)
+
     LOGGER.debug("compare_img result: %s", result)
     if result is False:
         # TODO: Validate image size and normalize them
         LOGGER.error("image compare failed! (%s) <> (%s)", file1, file2)
     return result
+
+
+def generate_diff_img(file1, file2, diff_img_path):
+    """
+    :param file1: the qualified path to the image file, with file ending
+    :param file2: the qualified path to the second image file, with file ending
+    :param diff_img_path: the qualified path to the image file you want to save
+    Compares two images using imagemagick and saves the diff image in
+    diff_img_path.
+    """
+    import subprocess
+    subprocess.call(["compare", "-compose", "src", file1, file2, diff_img_path])
+    LOGGER.debug("diff image saved in build directory")
+    return
 
 
 def add_label(image, label):
@@ -96,7 +110,7 @@ def normalize_img(img_file, greyscale=False):
 
 
 def blank_compare_matrix(num_configs, width, height):
-    return Image.new("RGBA", (num_configs*width, num_configs*height), (0, 0, 0, 0))
+    return Image.new("RGBA", (num_configs * width, num_configs * height), (0, 0, 0, 0))
 
 
 def get_overlay_mask(width, height, alpha):
@@ -112,11 +126,11 @@ def _get_color_distance(px1, px2):
     # Works with any length pixel as long as px1 and px2 are same tuple format.
     # Don't have to normalize the result because there has to be a normalization
     # pass at the end anyway.
-    return math.sqrt(sum([abs(a-b)**2 for (a, b) in zip(px1, px2)]))
+    return math.sqrt(sum([abs(a - b) ** 2 for (a, b) in zip(px1, px2)]))
 
 
 # In R8G8B8A8 space, this is white vs. black, so all distances must be at most this.
-_DIST_MAX = 2*256
+_DIST_MAX = 2 * 256
 
 
 def draw_visual_diff(canvas, img1, img2, position, cfgstring, overlay_mask):
@@ -142,7 +156,7 @@ def draw_visual_diff(canvas, img1, img2, position, cfgstring, overlay_mask):
     # is less than one tenth of a color step, then they're effectively identical images,
     # so there's no point in normalizing.
     if (max_dist - min_dist > 0.1):
-        dist_multiplier = 255.0/(max_dist-min_dist)
+        dist_multiplier = 255.0 / (max_dist - min_dist)
     # Only need luminance channel since it's a 1-d distance metric.
     normalized_distances = Image.new("L", img1.size, 0)
     for y in range(img1.height):
@@ -150,7 +164,8 @@ def draw_visual_diff(canvas, img1, img2, position, cfgstring, overlay_mask):
             pixel = (x, y)
             # Safe to cast to int because dist_multiplier * (pixel - pixel_min) should
             # never exceed 255, and it's 256 we're worried about.
-            normalized_dist = int(dist_multiplier * (distances.getpixel(pixel)-min_dist))
+            normalized_dist = \
+                int(dist_multiplier * (distances.getpixel(pixel) - min_dist))
             normalized_distances.putpixel(pixel, normalized_dist)
 
     # Draw base image, then draw diff on top.
@@ -159,4 +174,4 @@ def draw_visual_diff(canvas, img1, img2, position, cfgstring, overlay_mask):
     canvas.paste(normalized_distances, position, overlay_mask)
     # and finally label what the comparison is for.
     draw = ImageDraw.Draw(canvas)
-    draw.text(xy=(position[0]+3, position[1]+3), fill=(0, 0, 255), text=cfgstring)
+    draw.text(xy=(position[0] + 3, position[1] + 3), fill=(0, 0, 255), text=cfgstring)
