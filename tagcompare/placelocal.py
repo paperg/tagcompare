@@ -13,7 +13,7 @@ LOGGER = logger.Logger(__name__).get()
 
 
 class PlaceLocalApi:
-    API_PREFIX = "api/v2/"
+    API_PREFIX = "api/v2"
 
     def __init__(self, domain=None, request_headers=None, validate=True):
         if not domain:
@@ -71,10 +71,10 @@ class PlaceLocalApi:
     def get_cids_from_settings(self, settings_obj=settings.DEFAULT):
         cids = settings_obj.campaigns
         pids = settings_obj.publishers
-        return self._get_cids(cids, pids)
+        return self.get_all_cids(cids, pids)
 
     def submit_campaign(self, cid):
-        route = "/campaign/{}/submit".format(cid)
+        route = "campaign/{}/submit".format(cid)
         return self.put(route)
 
     """ Private functions """
@@ -92,7 +92,9 @@ class PlaceLocalApi:
 
     def __validate_response(self, response, url):
         valid = PlaceLocalApi._is_valid_response(response, url)
-        err_message = 'Invalid response for url {}: \n{}'.format(url, response)
+        err_message = 'Invalid response for url {}: {}\n{}'.format(url,
+                                                                   response,
+                                                                   response.text)
         if self._validate:
             assert valid, err_message
 
@@ -173,7 +175,7 @@ class PlaceLocalApi:
         LOGGER.debug("_get_all_pids: %s", result)
         return result
 
-    def _get_cids(self, cids=None, pids=None):
+    def get_all_cids(self, cids=None, pids=None):
         """
         Gets a list of campaign ids from a combinination of cids and pids
         :param cids: campaign ids, directly gets appended to the list of cids
