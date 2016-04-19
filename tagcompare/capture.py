@@ -71,6 +71,10 @@ class TagCapture(object):
         tag_element = self._driver.find_element_by_tag_name(tagtype)
         webdriver.screenshot_element(
             self._driver, tag_element, output_path)
+        if errors:
+            self.logger.warn(
+                'Found browser errors while capturing %s:\n%s',
+                output_path, errors)
         return errors
 
     def _capture_tag(self, pathbuilder, tags_per_campaign,
@@ -117,16 +121,18 @@ class TagCapture(object):
             # nested loops here
             for tagsize in tagsizes:
                 if tagsize not in tags_per_campaign:
-                    self.logger.warn("No tagsize '%s' found for campaign: %s. Skipping",
-                                     tagsize, cid)
+                    self.logger.warn(
+                        "No tagsize '%s' found for campaign: %s. Skipping",
+                        tagsize, cid)
                     continue
                 pathbuilder.tagsize = tagsize
                 for tagtype in tagtypes:
                     pathbuilder.tagtype = tagtype
                     try:
-                        r = self._capture_tag(pathbuilder=pathbuilder,
-                                              tags_per_campaign=tags_per_campaign,
-                                              capture_existing=capture_existing)
+                        r = self._capture_tag(
+                            pathbuilder=pathbuilder,
+                            tags_per_campaign=tags_per_campaign,
+                            capture_existing=capture_existing)
                     except selenium.common.exceptions.WebDriverException:
                         self.logger.exception(
                             "Exception while capturing tags!")
@@ -141,13 +147,17 @@ class TagCapture(object):
             self.logger.debug(
                 "Captured tags for campaign %s on %s", cid, self._caps)
         self.logger.info(
-            "Captured %s tags, skipped %s existing tags for config=%s.  Found %s errors",
-            num_captured, num_existing_skipped, self._caps, len(browser_errors))
+            "Captured %s tags, skipped %s existing tags for config=%s.",
+            num_captured, num_existing_skipped, self._caps)
+        self.logger.info(
+            "Found %s browser errors:\n%s",
+            len(browser_errors), browser_errors)
         return browser_errors
 
     @staticmethod
-    def __get_capabilities_for_config(configname, buildname=None, max_duration=9999,
-                                      all_configs=None):
+    def __get_capabilities_for_config(
+            configname, buildname=None, max_duration=9999,
+            all_configs=None):
         if not all_configs:
             all_configs = settings.DEFAULT.all_configs
         assert configname in all_configs, 'configname not in all_configs!'
@@ -188,8 +198,9 @@ class CaptureManager(object):
             self.logger.warn("No tags found to capture!")
             return
 
-        self.logger.info("Capturing tags for %s campaigns over %s configs", len(cids),
-                         len(configs))
+        self.logger.info(
+            "Capturing tags for %s campaigns over %s configs", len(cids),
+            len(configs))
         # TODO: Implement progress bar
         errors = []
 
@@ -202,10 +213,11 @@ class CaptureManager(object):
             tagcapture = TagCapture.from_config(configname, buildname)
             pathbuilder.config = configname
             cpb = pathbuilder.clone()
-            captures[configname] = pool.apply_async(func=tagcapture.capture_tags,
-                                                    args=(all_tags, cpb,
-                                                          tagsizes, tagtypes,
-                                                          capture_existing))
+            captures[configname] = pool.apply_async(
+                func=tagcapture.capture_tags,
+                args=(all_tags, cpb,
+                      tagsizes, tagtypes,
+                      capture_existing))
 
         for configname in captures:
             errors += captures[configname].get()

@@ -40,7 +40,12 @@ def test_capture_configs():
                                           configs=configs,
                                           tagsizes=adsizes, tagtypes=adtypes,
                                           capture_existing=True)
-    assert not errors, "There should be no errors!"
+    '''There should be a SEVERE error like:
+    'http://fonts.googleapis.com/css?family=[object+Object]... Failed to load
+    '''
+    assert errors
+    assert len(errors) == 1, "There should be one error!"
+    assert errors[0]['level'] == 'SEVERE'
     pb.rmbuild()
 
 
@@ -65,8 +70,9 @@ def test_capture_tag_remote():
     Verify that we can capture iframe and script tags
     :return:
     """
-    pb = output.create(build="capture_tag_test", config="testconfig", cid="testcid",
-                       tagsize="skyscraper", tagtype="iframe")
+    pb = output.create(
+        build="capture_tag_test", config="testconfig", cid="testcid",
+        tagsize="skyscraper", tagtype="iframe")
     tags = {"skyscraper": {
         "iframe": "<iframe>iframe tag for skyscraper</iframe>",
         "script": "<script>script tag for skyscraper</script>",
