@@ -35,11 +35,12 @@ def test_capture_configs():
     adtypes = ["iframe"]
 
     pb = output.create(build="capture_test")
-    errors = capture._capture_tags_for_configs(cids=cids, pathbuilder=pb,
-                                               configs=configs,
-                                               tagsizes=adsizes, tagtypes=adtypes,
-                                               capture_existing=True)
-    assert errors, "There should be at least one error!"
+    cm = capture.CaptureManager()
+    errors = cm._capture_tags_for_configs(cids=cids, pathbuilder=pb,
+                                          configs=configs,
+                                          tagsizes=adsizes, tagtypes=adtypes,
+                                          capture_existing=True)
+    assert not errors, "There should be no errors!"
     pb.rmbuild()
 
 
