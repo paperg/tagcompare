@@ -1,3 +1,4 @@
+import json
 import time
 
 from selenium.common.exceptions import WebDriverException
@@ -123,8 +124,7 @@ def display_tag(driver, tag, wait_for_load=True, wait_time=3):
 
 
 def _make_script(tag):
-    script = "document.body.innerHTML=\"{}\";".format(tag) \
-        .replace('\n', '').replace('\r', '').rstrip()
+    script = "document.body.innerHTML={};".format(json.dumps(tag))
     LOGGER.debug("_make_script: %s", script)
     return script
 
