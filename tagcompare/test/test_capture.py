@@ -35,18 +35,18 @@ def test_capture_configs():
     adtypes = ["iframe"]
 
     pb = output.create(build="capture_test")
-    cm = capture.CaptureManager()
+    cm = capture.CaptureManager(domain="www.placelocal.com")
     errors = cm._capture_tags_for_configs(cids=cids, pathbuilder=pb,
                                           configs=configs,
                                           tagsizes=adsizes, tagtypes=adtypes,
                                           capture_existing=True)
-    '''There should be a SEVERE error like:
+    '''There should be two SEVERE error like:
     'http://fonts.googleapis.com/css?family=[object+Object]... Failed to load
     '''
     assert errors
-    assert len(errors) == 1, "There should be one error!"
+    assert len(errors) == 2, "There should be two errors!"
     assert errors[0]['level'] == 'SEVERE'
-    pb.rmbuild()
+    assert "http://fonts.googleapis.com" in str(errors[0]['message'])
 
 
 def test_capture_tag():

@@ -184,9 +184,12 @@ class TagCapture(object):
 class CaptureManager(object):
     MAX_REMOTE_JOBS = 6
 
-    def __init__(self):
+    def __init__(self, domain=None):
+        self.domain = domain
+        if not self.domain:
+            self.domain = settings.DEFAULT.domain
         self.logger = logger.Logger(name="capture", writefile=True).get()
-        self.placelocal_api = placelocal.PlaceLocalApi()
+        self.placelocal_api = placelocal.PlaceLocalApi(domain=self.domain)
 
     def _capture_tags_for_configs(self, cids, pathbuilder,
                                   configs,

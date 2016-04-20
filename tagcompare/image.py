@@ -30,7 +30,8 @@ def generate_diff_img(file1, file2, diff_img_path):
     diff_img_path.
     """
     import subprocess
-    subprocess.call(["compare", "-compose", "src", file1, file2, diff_img_path])
+    subprocess.call(
+        ["compare", "-compose", "src", file1, file2, diff_img_path])
     LOGGER.debug("diff image saved in build directory")
     return
 
@@ -101,12 +102,7 @@ def crop(img_file, cropbox, backup=False):
 
 def normalize_img(img_file, greyscale=False):
     img = Image.open(img_file)
-    if not greyscale:
-        return img
-
-    # TODO: Figure out ways to make font issues more prominent
-    # greyscale
-    return img.convert('LA')
+    return img
 
 
 def blank_compare_matrix(num_configs, width, height):
@@ -129,7 +125,8 @@ def _get_color_distance(px1, px2):
     return math.sqrt(sum([abs(a - b) ** 2 for (a, b) in zip(px1, px2)]))
 
 
-# In R8G8B8A8 space, this is white vs. black, so all distances must be at most this.
+# In R8G8B8A8 space, this is white vs. black, so all distances must be at
+# most this.
 _DIST_MAX = 2 * 256
 
 
@@ -174,4 +171,5 @@ def draw_visual_diff(canvas, img1, img2, position, cfgstring, overlay_mask):
     canvas.paste(normalized_distances, position, overlay_mask)
     # and finally label what the comparison is for.
     draw = ImageDraw.Draw(canvas)
-    draw.text(xy=(position[0] + 3, position[1] + 3), fill=(0, 0, 255), text=cfgstring)
+    draw.text(xy=(position[0] + 3, position[1] + 3),
+              fill=(0, 0, 255), text=cfgstring)

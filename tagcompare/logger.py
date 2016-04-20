@@ -5,10 +5,6 @@ import settings
 import time
 
 
-def set_level_from_settings():
-    logging.getLogger("tagcompare").setLevel(settings.DEFAULT.loglevel)
-
-
 def generate_timestamp():
     return time.strftime("%Y%m%d-%H%M%S")
 
