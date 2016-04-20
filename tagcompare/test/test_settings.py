@@ -1,5 +1,4 @@
 import os
-import logging
 
 from tagcompare import settings
 
@@ -30,7 +29,8 @@ def test_domain():
         "Default domain is not correct!"
     expected_domain = "www.example.com"
     domain_settings.domain = expected_domain
-    assert domain_settings.domain == expected_domain, "domain was not set correctly!"
+    assert domain_settings.domain == expected_domain, \
+        "domain was not set correctly!"
 
 
 def test_campaigns():
@@ -39,7 +39,8 @@ def test_campaigns():
         "Default campaigns is not correct!"
     expected = [999999]
     test_settings.campaigns = expected
-    assert test_settings.campaigns == expected, "campaigns was not set correctly!"
+    assert test_settings.campaigns == expected, \
+        "campaigns was not set correctly!"
 
 
 def test_publishers():
@@ -48,16 +49,8 @@ def test_publishers():
         "Default publishers is not correct!"
     expected = [444]
     test_settings.publishers = expected
-    assert test_settings.publishers == expected, "publishers was not set correctly!"
-
-
-def test_loglevel():
-    test_settings = createSettings()
-    assert test_settings.loglevel == logging.INFO, \
-        "Default loglevel is not correct!"
-    expected = logging.DEBUG
-    test_settings.loglevel = expected
-    assert test_settings.loglevel == expected, "loglevel was not set correctly!"
+    assert test_settings.publishers == expected, \
+        "publishers was not set correctly!"
 
 
 def test_config():
@@ -96,8 +89,10 @@ def test_tagsizes():
     assert len(all_sizes) == 4, "There should be exactly 4 supported sizes!"
     enabled_sizes = test_tag_settings.tagsizes
     assert enabled_sizes, "Could not get enabled_sizes from tag settings"
-    assert "medium_rectangle" in enabled_sizes, "medium_rectangle should be enabled!"
-    assert "skyscraper" not in enabled_sizes, "skyscraper should not be enabled!"
+    assert "medium_rectangle" in enabled_sizes, \
+        "medium_rectangle should be enabled!"
+    assert "skyscraper" not in enabled_sizes, \
+        "skyscraper should not be enabled!"
     assert len(enabled_sizes) == 3, "There should be exactly 3 enabled sizes!"
 
 

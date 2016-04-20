@@ -14,11 +14,13 @@ def generate_timestamp():
 
 
 class Logger(object):
-    def __init__(self, name, directory=None, writefile=False):
+    def __init__(self, name, directory=None,
+                 writefile=False, loglevel=logging.INFO):
         if directory and not writefile:
             raise ValueError(
                 "directory was specified when writefile is False!")
 
+        self.__loglevel = loglevel
         self.__directory = directory
         if writefile:
             if not directory:
@@ -31,7 +33,7 @@ class Logger(object):
         logger = logging.getLogger('tagcompare.%s' % name)
 
         # Set default log levels
-        logging.getLogger("tagcompare").setLevel(settings.DEFAULT.loglevel)
+        logging.getLogger("tagcompare").setLevel(loglevel)
         if not logger.handlers:
             if writefile:
                 logger.addHandler(self.__file_handler())
@@ -61,7 +63,7 @@ class Logger(object):
         handler = logging.StreamHandler()
         formatter = logging.Formatter('%(levelname)s: %(message)s')
         handler.setFormatter(formatter)
-        handler.setLevel(settings.DEFAULT.loglevel)
+        handler.setLevel(self.__loglevel)
         return handler
 
     def get(self):

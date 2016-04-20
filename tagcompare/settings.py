@@ -4,8 +4,6 @@ import logging
 
 from enum import IntEnum
 
-import logger
-
 
 MODULE_NAME = "tagcompare"
 DEFAULT_FILENAME = "settings.json"
@@ -42,7 +40,7 @@ TEST_MODE = False
 """
 The animation time until the tag stops on the final frame
 Setting animation time of 1 makes the ad transition to final frame after 1s
-Any lower than this will cause incorrect animation transitions on the final frame
+Any lower than this will cause incorrect animation transitions
 """
 TAG_ANIMATION_TIME = 1
 
@@ -100,16 +98,6 @@ class Settings(object):
         self.__campaigns = None
         self.__publishers = None
         self.__domain = None
-        self.__loglevel = logging.INFO
-
-    @property
-    def loglevel(self):
-        return self.__loglevel
-
-    @loglevel.setter
-    def loglevel(self, value):
-        self.__loglevel = value
-        logger.set_level_from_settings()
 
     @property
     def _comparefile(self):
